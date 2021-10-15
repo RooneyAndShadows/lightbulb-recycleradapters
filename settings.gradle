@@ -1,0 +1,3 @@
+rootProject.name = "RecyclerAdapters"
+include ':app'
+include ':recycleradapters'
