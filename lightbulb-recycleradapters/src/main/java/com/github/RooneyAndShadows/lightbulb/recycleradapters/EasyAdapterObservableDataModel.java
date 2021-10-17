@@ -1,8 +1,8 @@
-package com.rands.lightbulb.recycleradapters;
+package com.github.RooneyAndShadows.lightbulb.recycleradapters;
 
 import android.os.Parcel;
 
-import com.rands.lightbulb.commons.BR;
+import com.github.RooneyAndShadows.commons.BR;
 
 import androidx.databinding.Bindable;
 import androidx.databinding.Observable;

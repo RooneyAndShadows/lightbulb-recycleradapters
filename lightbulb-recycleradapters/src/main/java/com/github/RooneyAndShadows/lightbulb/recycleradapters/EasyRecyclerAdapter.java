@@ -1,10 +1,10 @@
-package com.rands.lightbulb.recycleradapters;
+package com.github.RooneyAndShadows.lightbulb.recycleradapters;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 
-import com.rands.lightbulb.recycleradapters.callbacks.EasyAdapterCollectionChangedListener;
-import com.rands.lightbulb.recycleradapters.callbacks.EasyAdapterSelectionChangedListener;
+import com.github.RooneyAndShadows.lightbulb.recycleradapters.callbacks.EasyAdapterCollectionChangedListener;
+import com.github.RooneyAndShadows.lightbulb.recycleradapters.callbacks.EasyAdapterSelectionChangedListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +19,10 @@ import androidx.lifecycle.OnLifecycleEvent;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
-import static com.rands.lightbulb.recycleradapters.EasyAdapterSelectableModes.SELECT_MULTIPLE;
-import static com.rands.lightbulb.recycleradapters.EasyAdapterSelectableModes.SELECT_NONE;
-import static com.rands.lightbulb.recycleradapters.EasyAdapterSelectableModes.SELECT_SINGLE;
-import static com.rands.lightbulb.recycleradapters.EasyAdapterSelectableModes.valueOf;
+import static com.github.RooneyAndShadows.lightbulb.recycleradapters.EasyAdapterSelectableModes.SELECT_MULTIPLE;
+import static com.github.RooneyAndShadows.lightbulb.recycleradapters.EasyAdapterSelectableModes.SELECT_NONE;
+import static com.github.RooneyAndShadows.lightbulb.recycleradapters.EasyAdapterSelectableModes.SELECT_SINGLE;
+import static com.github.RooneyAndShadows.lightbulb.recycleradapters.EasyAdapterSelectableModes.valueOf;
 
 @SuppressWarnings("unused")
 public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel> extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements LifecycleObserver {

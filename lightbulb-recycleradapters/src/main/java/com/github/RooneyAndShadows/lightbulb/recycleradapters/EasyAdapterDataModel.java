@@ -1,4 +1,4 @@
-package com.rands.lightbulb.recycleradapters;
+package com.github.RooneyAndShadows.lightbulb.recycleradapters;
 
 import android.os.Parcel;
 import android.os.Parcelable;
