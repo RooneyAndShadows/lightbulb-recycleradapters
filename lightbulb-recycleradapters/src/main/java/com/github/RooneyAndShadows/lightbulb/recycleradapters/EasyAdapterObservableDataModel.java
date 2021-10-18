@@ -1,12 +1,14 @@
-package com.github.RooneyAndShadows.lightbulb.recycleradapters;
+package com.github.rooneyandshadows.lightbulb.recycleradapters;
 
 import android.os.Parcel;
 
-import com.github.RooneyAndShadows.commons.BR;
 
 import androidx.databinding.Bindable;
 import androidx.databinding.Observable;
 import androidx.databinding.PropertyChangeRegistry;
+
+import static com.github.rooneyandshadows.lightbulb.recycleradapters.BR.*;
+
 
 public abstract class EasyAdapterObservableDataModel extends EasyAdapterDataModel implements Observable {
     private final PropertyChangeRegistry callbacks = new PropertyChangeRegistry();

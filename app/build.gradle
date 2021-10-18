@@ -6,7 +6,7 @@ android {
     compileSdk 30
 
     defaultConfig {
-        applicationId "com.rands.lightbulb.recycleradapters"
+        applicationId "com.github.rooneyandshadows.lightbulb.recycleradapters"
         minSdk 24
         targetSdk 30
         versionCode 1

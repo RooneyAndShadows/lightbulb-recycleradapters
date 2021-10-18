@@ -1,4 +1,4 @@
-package com.github.RooneyAndShadows.lightbulb.recycleradapters.callbacks;
+package com.github.rooneyandshadows.lightbulb.recycleradapters.callbacks;
 
 public interface EasyAdapterCollectionChangedListener {
         void onChanged();
