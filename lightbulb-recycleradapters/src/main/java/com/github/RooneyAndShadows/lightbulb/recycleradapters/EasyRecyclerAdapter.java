@@ -12,17 +12,17 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.OnLifecycleEvent;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import static com.github.rooneyandshadows.lightbulb.recycleradapters.EasyAdapterSelectableModes.*;
 
 @SuppressWarnings("unused")
-public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel> extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements LifecycleObserver {
+public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel> extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements DefaultLifecycleObserver {
     protected LifecycleOwner lifecycleOwner;
     protected ArrayList<ItemType> items = new ArrayList<>();
     protected ArrayList<Integer> selectedPositions = new ArrayList<>();
@@ -32,6 +32,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
     private final ArrayList<EasyAdapterSelectionChangedListener> onSelectionChangedListeners = new ArrayList<>();
     private final ArrayList<EasyAdapterCollectionChangedListener> onCollectionChangedListeners = new ArrayList<>();
     private HeaderViewRecyclerAdapter wrapperAdapter;
+
 
     public EasyRecyclerAdapter(EasyAdapterConfiguration<ItemType> adapterConfig) {
         if (adapterConfig == null)
@@ -71,9 +72,8 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         this.recyclerView = recyclerView;
     }
 
-    //Removes observable callbacks on destroy to avoid leaks
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    public void onDestroy() {
+    @Override
+    public void onDestroy(@NonNull LifecycleOwner owner) {
         clearObservableCallbacksOnCollection();
     }
 
@@ -532,7 +532,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
                 items.get(posToUnselect).setSelected(false);
         if (notifyForSelectionChange)
             for (int position : selectedPositions)
-                notifyItemChanged(position);
+                notifyItemChanged(position + getHeadersCount());
         List<Integer> affectedPositions = new ArrayList<>(selectedPositions);
         selectedPositions.clear();
         return affectedPositions;
@@ -556,7 +556,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         }
         items.get(position).setSelected(newState);
         if (notifyForSelectionChange)
-            notifyItemChanged(position);
+            notifyItemChanged(position + getHeadersCount());
     }
 
     private void dispatchSelectionChangedEvent() {
