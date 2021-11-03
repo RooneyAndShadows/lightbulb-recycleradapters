@@ -3,9 +3,6 @@ package com.github.rooneyandshadows.lightbulb.recycleradapters;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 
-import com.github.rooneyandshadows.lightbulb.recycleradapters.callbacks.EasyAdapterCollectionChangedListener;
-import com.github.rooneyandshadows.lightbulb.recycleradapters.callbacks.EasyAdapterSelectionChangedListener;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -13,30 +10,28 @@ import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
-import static com.github.rooneyandshadows.lightbulb.recycleradapters.EasyAdapterSelectableModes.*;
+import static com.github.rooneyandshadows.lightbulb.recycleradapters.LightBulbAdapterSelectableModes.*;
 
 @SuppressWarnings("unused")
-public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel> extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements DefaultLifecycleObserver {
+public abstract class LightBulbAdapter<ItemType extends LightBulbAdapterDataModel> extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements DefaultLifecycleObserver {
     protected LifecycleOwner lifecycleOwner;
     protected ArrayList<ItemType> items = new ArrayList<>();
     protected ArrayList<Integer> selectedPositions = new ArrayList<>();
     private RecyclerView recyclerView;
-    private EasyAdapterSelectableModes selectableMode;
-    private final EasyAdapterItemsComparator<ItemType> itemsComparator;
-    private final ArrayList<EasyAdapterSelectionChangedListener> onSelectionChangedListeners = new ArrayList<>();
-    private final ArrayList<EasyAdapterCollectionChangedListener> onCollectionChangedListeners = new ArrayList<>();
-    private HeaderViewRecyclerAdapter wrapperAdapter;
+    private LightBulbAdapterSelectableModes selectableMode;
+    private final LightBulbAdapterItemsComparator<ItemType> itemsComparator;
+    private final ArrayList<SelectionChangedListener> onSelectionChangedListeners = new ArrayList<>();
+    private final ArrayList<CollectionChangedListener> onCollectionChangedListeners = new ArrayList<>();
+    private HeaderFooterViewAdapter wrapperAdapter;
 
 
-    public EasyRecyclerAdapter(EasyAdapterConfiguration<ItemType> adapterConfig) {
+    public LightBulbAdapter(LightBulbAdapterConfiguration<ItemType> adapterConfig) {
         if (adapterConfig == null)
-            adapterConfig = new EasyAdapterConfiguration<>();
+            adapterConfig = new LightBulbAdapterConfiguration<>();
         setHasStableIds(adapterConfig.isUseStableIds());
         this.selectableMode = adapterConfig.getSelectableMode();
         this.itemsComparator = adapterConfig.getComparator();
@@ -46,8 +41,8 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         }
     }
 
-    public EasyRecyclerAdapter() {
-        this(new EasyAdapterConfiguration<>());
+    public LightBulbAdapter() {
+        this(new LightBulbAdapterConfiguration<>());
     }
 
     public Bundle saveAdapterState() {
@@ -86,20 +81,20 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         return item.getItemName();
     }
 
-    public void addOnSelectionChangedListener(EasyAdapterSelectionChangedListener onSelectionChangedListener) {
+    public void addOnSelectionChangedListener(SelectionChangedListener onSelectionChangedListener) {
         this.onSelectionChangedListeners.add(onSelectionChangedListener);
     }
 
-    public void removeOnSelectionChangedListener(EasyAdapterSelectionChangedListener onSelectionChangedListener) {
+    public void removeOnSelectionChangedListener(SelectionChangedListener onSelectionChangedListener) {
         this.onSelectionChangedListeners.remove(onSelectionChangedListener);
     }
 
-    public void addOrReplaceSelectionChangedListener(EasyAdapterSelectionChangedListener onSelectionChangedListener) {
+    public void addOrReplaceSelectionChangedListener(SelectionChangedListener onSelectionChangedListener) {
         this.onSelectionChangedListeners.remove(onSelectionChangedListener);
         this.onSelectionChangedListeners.add(onSelectionChangedListener);
     }
 
-    public void addOnCollectionChangedListener(EasyAdapterCollectionChangedListener onCollectionChangedListener) {
+    public void addOnCollectionChangedListener(CollectionChangedListener onCollectionChangedListener) {
         this.onCollectionChangedListeners.add(onCollectionChangedListener);
     }
 
@@ -109,15 +104,15 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
     }
 
     protected final void clearObservableCallbacks(ItemType item) {
-        if (item instanceof EasyAdapterObservableDataModel)
-            ((EasyAdapterObservableDataModel) item).clearObservableCallbacks();
+        if (item instanceof LightBulbAdapterObservableDataModel)
+            ((LightBulbAdapterObservableDataModel) item).clearObservableCallbacks();
     }
 
     protected final void clearObservableCallbacksOnCollection() {
         for (ItemType item : items) clearObservableCallbacks(item);
     }
 
-    public void setWrapperAdapter(HeaderViewRecyclerAdapter wrapperAdapter) {
+    public void setWrapperAdapter(HeaderFooterViewAdapter wrapperAdapter) {
         this.wrapperAdapter = wrapperAdapter;
     }
 
@@ -131,7 +126,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
             items.addAll(collection);
             notifyDataSetChanged();
         } else {
-            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new EasyAdapterDiffUtilCallback<>(items, collection, itemsComparator), true);
+            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new LightBulbAdapterDiffUtilCallback<>(items, collection, itemsComparator), true);
             selectionChanged = clearSelectionInternally(false).size() > 0;
             clearObservableCallbacksOnCollection();
             items.clear();
@@ -359,7 +354,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         }
     }
 
-    public EasyAdapterSelectableModes getSelectableMode() {
+    public LightBulbAdapterSelectableModes getSelectableMode() {
         return selectableMode;
     }
 
@@ -560,12 +555,20 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
     }
 
     private void dispatchSelectionChangedEvent() {
-        for (EasyAdapterSelectionChangedListener onSelectionChangedListener : onSelectionChangedListeners)
+        for (SelectionChangedListener onSelectionChangedListener : onSelectionChangedListeners)
             onSelectionChangedListener.onChanged(getSelectedPositionsAsArray());
     }
 
     private void dispatchCollectionChangedEvent() {
-        for (EasyAdapterCollectionChangedListener listener : onCollectionChangedListeners)
+        for (CollectionChangedListener listener : onCollectionChangedListeners)
             listener.onChanged();
+    }
+
+    public interface CollectionChangedListener {
+        void onChanged();
+    }
+
+    public interface SelectionChangedListener {
+        void onChanged(int[] newSelection);
     }
 }

@@ -7,17 +7,15 @@ import androidx.databinding.Bindable;
 import androidx.databinding.Observable;
 import androidx.databinding.PropertyChangeRegistry;
 
-import static com.github.rooneyandshadows.lightbulb.recycleradapters.BR.*;
 
-
-public abstract class EasyAdapterObservableDataModel extends EasyAdapterDataModel implements Observable {
+public abstract class LightBulbAdapterObservableDataModel extends LightBulbAdapterDataModel implements Observable {
     private final PropertyChangeRegistry callbacks = new PropertyChangeRegistry();
 
-    public EasyAdapterObservableDataModel(boolean selected) {
+    public LightBulbAdapterObservableDataModel(boolean selected) {
         super(selected);
     }
 
-    protected EasyAdapterObservableDataModel(Parcel in) {
+    protected LightBulbAdapterObservableDataModel(Parcel in) {
         super(in);
     }
 

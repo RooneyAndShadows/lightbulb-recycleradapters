@@ -3,16 +3,16 @@ package com.github.rooneyandshadows.lightbulb.recycleradapters;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public abstract class EasyAdapterDataModel implements Parcelable {
+public abstract class LightBulbAdapterDataModel implements Parcelable {
     private boolean selected;
 
     public abstract String getItemName();
 
-    public EasyAdapterDataModel(boolean selected) {
+    public LightBulbAdapterDataModel(boolean selected) {
         this.selected = selected;
     }
 
-    protected EasyAdapterDataModel(Parcel in) {
+    protected LightBulbAdapterDataModel(Parcel in) {
         selected = in.readByte() != 0;
     }
 

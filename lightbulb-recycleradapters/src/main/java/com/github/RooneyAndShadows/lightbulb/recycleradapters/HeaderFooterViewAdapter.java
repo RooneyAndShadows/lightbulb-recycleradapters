@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 @SuppressWarnings({"rawtypes", "unused", "unchecked"})
-public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
+class HeaderFooterViewAdapter extends RecyclerView.Adapter {
     private static final int BASE_HEADER_VIEW_TYPE = -1 << 10;
     private static final int BASE_FOOTER_VIEW_TYPE = -1 << 11;
     private final List<FixedViewInfo> mHeaderViewInfoList;
@@ -20,11 +20,11 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     private RecyclerView.Adapter dataAdapter;
     private boolean mIsStaggeredGrid;
 
-    public HeaderViewRecyclerAdapter() {
+    public HeaderFooterViewAdapter() {
         this(null, null);
     }
 
-    public HeaderViewRecyclerAdapter(List<FixedViewInfo> headerViewInfoList, List<FixedViewInfo> footerViewInfoList) {
+    public HeaderFooterViewAdapter(List<FixedViewInfo> headerViewInfoList, List<FixedViewInfo> footerViewInfoList) {
         if (headerViewInfoList == null) mHeaderViewInfoList = new ArrayList<>();
         else mHeaderViewInfoList = headerViewInfoList;
         if (footerViewInfoList == null) mFooterViewInfoList = new ArrayList<>();
