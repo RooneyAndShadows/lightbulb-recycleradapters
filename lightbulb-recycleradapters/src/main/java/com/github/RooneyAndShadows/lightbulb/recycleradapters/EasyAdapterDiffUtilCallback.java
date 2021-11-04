@@ -4,12 +4,12 @@ import java.util.List;
 
 import androidx.recyclerview.widget.DiffUtil;
 
-final class LightBulbAdapterDiffUtilCallback<T extends LightBulbAdapterDataModel> extends DiffUtil.Callback {
+final class EasyAdapterDiffUtilCallback<T extends EasyAdapterDataModel> extends DiffUtil.Callback {
     private final List<T> oldData;
     private final List<T> newData;
-    private final LightBulbAdapterItemsComparator<T> compareCallbacks;
+    private final EasyAdapterItemsComparator<T> compareCallbacks;
 
-    public LightBulbAdapterDiffUtilCallback(List<T> oldData, List<T> newData, LightBulbAdapterItemsComparator<T> compareCallbacks) {
+    public EasyAdapterDiffUtilCallback(List<T> oldData, List<T> newData, EasyAdapterItemsComparator<T> compareCallbacks) {
         this.oldData = oldData;
         this.newData = newData;
         this.compareCallbacks = compareCallbacks;
