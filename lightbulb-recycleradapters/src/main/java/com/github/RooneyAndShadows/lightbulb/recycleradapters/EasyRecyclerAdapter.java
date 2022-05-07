@@ -16,6 +16,7 @@ import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.recyclerview.widget.AsyncListDiffer;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -188,6 +189,21 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         if (selectionChanged)
             dispatchSelectionChangedEvent();
         dispatchCollectionChangedEvent();
+    }
+
+    /**
+     * Used to move item in the adapter.
+     *
+     * @param fromPosition - from which position to move.
+     * @param toPosition   - new position.
+     */
+    public void moveItem(int fromPosition, int toPosition) {
+        if (!positionExists(fromPosition) || !positionExists(toPosition))
+            return;
+        ItemType movingItem = getItem(fromPosition);
+        items.remove(fromPosition);
+        items.add(toPosition, movingItem);
+        notifyItemMoved(fromPosition, toPosition);
     }
 
     /**
