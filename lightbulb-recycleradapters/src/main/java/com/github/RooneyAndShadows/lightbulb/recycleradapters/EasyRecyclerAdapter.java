@@ -156,7 +156,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         int positonStart = items.size() + 1;
         int newItemsCount = collectionToAdd.size();
         items.addAll(collectionToAdd);
-        notifyItemRangeInserted(positonStart, newItemsCount);
+        notifyItemRangeInserted(positonStart + getHeadersCount(), newItemsCount + getHeadersCount());
         dispatchCollectionChangedEvent();
     }
 
@@ -169,7 +169,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         if (item == null)
             return;
         items.add(item);
-        notifyItemInserted(items.size() - 1);
+        notifyItemInserted(items.size() + getHeadersCount() - 1);
         dispatchCollectionChangedEvent();
     }
 
@@ -185,7 +185,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         int notifyRangeStart = 0;
         int notifyRangeEnd = items.size() - 1;
         items.clear();
-        notifyItemRangeRemoved(notifyRangeStart, notifyRangeEnd);
+        notifyItemRangeRemoved(notifyRangeStart + getHeadersCount(), notifyRangeEnd + getHeadersCount());
         if (selectionChanged)
             dispatchSelectionChangedEvent();
         dispatchCollectionChangedEvent();
@@ -203,7 +203,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         ItemType movingItem = getItem(fromPosition);
         items.remove(fromPosition);
         items.add(toPosition, movingItem);
-        notifyItemMoved(fromPosition, toPosition);
+        notifyItemMoved(fromPosition + getHeadersCount(), toPosition + getHeadersCount());
     }
 
     /**
@@ -218,7 +218,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         boolean selectionChanged = isItemSelected(targetPosition);
         selectInternally(targetPosition, false, false);
         items.remove(targetPosition);
-        notifyItemRemoved(targetPosition);
+        notifyItemRemoved(targetPosition + getHeadersCount());
         if (selectionChanged)
             dispatchSelectionChangedEvent();
         dispatchCollectionChangedEvent();
@@ -245,7 +245,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
             selectInternally(position, false, false);
         items.removeAll(collection);
         for (int position : positionsToRemove)
-            notifyItemRemoved(position);
+            notifyItemRemoved(position + getHeadersCount());
         if (selectionChanged)
             dispatchSelectionChangedEvent();
         dispatchCollectionChangedEvent();
@@ -404,7 +404,9 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
     }
 
     public ItemType getItem(int position) {
-        return items.get(position);
+        if (positionExists(position))
+            return items.get(position);
+        return null;
     }
 
     public List<ItemType> getItems() {
@@ -574,6 +576,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         if (notifyForSelectionChange)
             notifyItemChanged(position + getHeadersCount());
     }
+
 
     private void dispatchSelectionChangedEvent() {
         for (EasyAdapterSelectionChangedListener onSelectionChangedListener : onSelectionChangedListeners)
