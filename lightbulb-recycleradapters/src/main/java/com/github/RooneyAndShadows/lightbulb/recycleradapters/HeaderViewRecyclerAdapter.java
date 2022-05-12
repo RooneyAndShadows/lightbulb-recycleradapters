@@ -124,6 +124,7 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         public View view;
     }
 
+    
     public int getHeadersCount() {
         return mHeaderViewInfoList.size();
     }
