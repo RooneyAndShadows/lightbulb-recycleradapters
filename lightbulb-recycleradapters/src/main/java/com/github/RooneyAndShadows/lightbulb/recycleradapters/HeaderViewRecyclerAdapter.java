@@ -18,13 +18,15 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     private final List<FixedViewInfo> mHeaderViewInfoList;
     private final List<FixedViewInfo> mFooterViewInfoList;
     private RecyclerView.Adapter dataAdapter;
+    private final RecyclerView recyclerView;
     private boolean mIsStaggeredGrid;
 
-    public HeaderViewRecyclerAdapter() {
-        this(null, null);
+    public HeaderViewRecyclerAdapter(RecyclerView recyclerView) {
+        this(recyclerView, null, null);
     }
 
-    public HeaderViewRecyclerAdapter(List<FixedViewInfo> headerViewInfoList, List<FixedViewInfo> footerViewInfoList) {
+    public HeaderViewRecyclerAdapter(RecyclerView recyclerView, List<FixedViewInfo> headerViewInfoList, List<FixedViewInfo> footerViewInfoList) {
+        this.recyclerView = recyclerView;
         if (headerViewInfoList == null) mHeaderViewInfoList = new ArrayList<>();
         else mHeaderViewInfoList = headerViewInfoList;
         if (footerViewInfoList == null) mFooterViewInfoList = new ArrayList<>();
@@ -93,6 +95,30 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         return dataAdapter.getItemId(position);
     }
 
+    @Override
+    public void registerAdapterDataObserver(@NonNull RecyclerView.AdapterDataObserver observer) {
+        super.registerAdapterDataObserver(observer);
+        dataAdapter.registerAdapterDataObserver(observer);
+    }
+
+    @Override
+    public void unregisterAdapterDataObserver(@NonNull RecyclerView.AdapterDataObserver observer) {
+        super.unregisterAdapterDataObserver(observer);
+        dataAdapter.unregisterAdapterDataObserver(observer);
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        dataAdapter.onAttachedToRecyclerView(recyclerView);
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        dataAdapter.onDetachedFromRecyclerView(recyclerView);
+    }
+
     public static class FixedViewInfo {
         public int viewType;
         public View view;
@@ -106,14 +132,6 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         return mFooterViewInfoList.size();
     }
 
-    private boolean isHeaderPosition(int position) {
-        return position < mHeaderViewInfoList.size();
-    }
-
-    private boolean isFooterPosition(int position) {
-        return position >= mHeaderViewInfoList.size() + dataAdapter.getItemCount();
-    }
-
     public boolean isEmpty() {
         return dataAdapter == null || dataAdapter.getItemCount() == 0;
     }
@@ -122,12 +140,13 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         for (int i = 0; i < mHeaderViewInfoList.size(); i++) {
             FixedViewInfo info = mHeaderViewInfoList.get(i);
             if (info.view == v) {
+                int positionToRemove = findAdapterPositionByView(v);
                 mHeaderViewInfoList.remove(i);
-                notifyDataSetChanged();
+                if (positionToRemove != -1)
+                    notifyItemRemoved(positionToRemove);
                 return true;
             }
         }
-
         return false;
     }
 
@@ -135,26 +154,31 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         for (int i = 0; i < mFooterViewInfoList.size(); i++) {
             FixedViewInfo info = mFooterViewInfoList.get(i);
             if (info.view == v) {
+                int positionToRemove = findAdapterPositionByView(v);
                 mFooterViewInfoList.remove(i);
-                notifyDataSetChanged();
+                if (positionToRemove != -1)
+                    notifyItemRemoved(i);
                 return true;
             }
         }
-
         return false;
     }
 
     public void removeAllHeaderView() {
         if (!mHeaderViewInfoList.isEmpty()) {
+            List<Integer> positionsToRemove = findHeaderPositions();
             mHeaderViewInfoList.clear();
-            notifyDataSetChanged();
+            if (positionsToRemove.size() > 0)
+                notifyItemRangeRemoved(positionsToRemove.get(0), positionsToRemove.size());
         }
     }
 
     public void removeAllFooterView() {
         if (!mFooterViewInfoList.isEmpty()) {
+            List<Integer> positionsToRemove = findFooterPositions();
             mFooterViewInfoList.clear();
-            notifyDataSetChanged();
+            if (positionsToRemove.size() > 0)
+                notifyItemRangeRemoved(positionsToRemove.get(0), positionsToRemove.size());
         }
     }
 
@@ -166,7 +190,7 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         info.view = view;
         info.viewType = BASE_HEADER_VIEW_TYPE + mHeaderViewInfoList.size();
         mHeaderViewInfoList.add(info);
-        notifyDataSetChanged();
+        notifyItemInserted(getHeadersCount());
     }
 
     public void addFooterView(View view) {
@@ -177,7 +201,7 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         info.view = view;
         info.viewType = BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList.size();
         mFooterViewInfoList.add(info);
-        notifyDataSetChanged();
+        notifyItemInserted(getHeadersCount() + dataAdapter.getItemCount() + getFootersCount());
     }
 
     public boolean containsFooterView(View v) {
@@ -204,14 +228,18 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         for (FixedViewInfo fixedViewInfo : mHeaderViewInfoList) {
             fixedViewInfo.view.setVisibility(shouldShow ? View.VISIBLE : View.GONE);
         }
-        notifyDataSetChanged();
+        List<Integer> positionsToChange = findHeaderPositions();
+        if (positionsToChange.size() > 0)
+            notifyItemRangeChanged(positionsToChange.get(0), positionsToChange.size());
     }
 
     public void setFooterVisibility(boolean shouldShow) {
         for (FixedViewInfo fixedViewInfo : mFooterViewInfoList) {
             fixedViewInfo.view.setVisibility(shouldShow ? View.VISIBLE : View.GONE);
         }
-        notifyDataSetChanged();
+        List<Integer> positionsToChange = findFooterPositions();
+        if (positionsToChange.size() > 0)
+            notifyItemRangeChanged(positionsToChange.get(0), positionsToChange.size());
     }
 
     private boolean isHeaderViewType(int viewType) {
@@ -222,6 +250,37 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     private boolean isFooterViewType(int viewType) {
         return viewType >= BASE_FOOTER_VIEW_TYPE
                 && viewType < (BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList.size());
+    }
+
+    private boolean isHeaderPosition(int position) {
+        return position < mHeaderViewInfoList.size();
+    }
+
+    private boolean isFooterPosition(int position) {
+        return position >= mHeaderViewInfoList.size() + dataAdapter.getItemCount();
+    }
+
+    private int findAdapterPositionByView(View view) {
+        RecyclerView.ViewHolder holder = recyclerView.findContainingViewHolder(view);
+        return holder == null ? -1 : holder.getAbsoluteAdapterPosition();
+    }
+
+    private List<Integer> findHeaderPositions() {
+        List<Integer> headerPositions = new ArrayList<>();
+        for (int i = 0; i < getItemCount(); i++) {
+            if (isHeaderPosition(i))
+                headerPositions.add(i);
+        }
+        return headerPositions;
+    }
+
+    private List<Integer> findFooterPositions() {
+        List<Integer> footerPositions = new ArrayList<>();
+        for (int i = 0; i < getItemCount(); i++) {
+            if (isFooterPosition(i))
+                footerPositions.add(i);
+        }
+        return footerPositions;
     }
 
     private RecyclerView.ViewHolder createHeaderFooterViewHolder(View view) {
@@ -258,30 +317,6 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         if (recycler.getLayoutManager() instanceof StaggeredGridLayoutManager) {
             this.mIsStaggeredGrid = true;
         }
-    }
-
-    @Override
-    public void registerAdapterDataObserver(@NonNull RecyclerView.AdapterDataObserver observer) {
-        super.registerAdapterDataObserver(observer);
-        dataAdapter.registerAdapterDataObserver(observer);
-    }
-
-    @Override
-    public void unregisterAdapterDataObserver(@NonNull RecyclerView.AdapterDataObserver observer) {
-        super.unregisterAdapterDataObserver(observer);
-        dataAdapter.unregisterAdapterDataObserver(observer);
-    }
-
-    @Override
-    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
-        super.onAttachedToRecyclerView(recyclerView);
-        dataAdapter.onAttachedToRecyclerView(recyclerView);
-    }
-
-    @Override
-    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView);
-        dataAdapter.onDetachedFromRecyclerView(recyclerView);
     }
 
     public RecyclerView.Adapter getAdapter() {
