@@ -3,6 +3,8 @@ package com.github.rooneyandshadows.lightbulb.recycleradapters;
 import java.util.List;
 
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListUpdateCallback;
+import androidx.recyclerview.widget.RecyclerView;
 
 final class EasyAdapterDiffUtilCallback<T extends EasyAdapterDataModel> extends DiffUtil.Callback {
     private final List<T> oldData;
@@ -36,4 +38,7 @@ final class EasyAdapterDiffUtilCallback<T extends EasyAdapterDataModel> extends 
         T newItem = newData.get(newItemPosition);
         return oldItem.isSelected() == newItem.isSelected() && compareCallbacks.compareItemsContent(oldItem, newItem);
     }
+
+
 }
+

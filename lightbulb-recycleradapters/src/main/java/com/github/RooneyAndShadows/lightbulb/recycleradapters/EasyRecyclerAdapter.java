@@ -12,12 +12,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.AsyncListDiffer;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
 
 import static com.github.rooneyandshadows.lightbulb.recycleradapters.EasyAdapterSelectableModes.*;
@@ -137,7 +139,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
             clearObservableCallbacksOnCollection();
             items.clear();
             items.addAll(collection);
-            diffResult.dispatchUpdatesTo(this);
+            diffResult.dispatchUpdatesTo(new EasyRecyclerAdapterUpdateCallback(this, getHeadersCount()));
             recyclerView.invalidateItemDecorations();
         }
         if (selectionChanged)
@@ -154,11 +156,12 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         if (collectionToAdd == null || collectionToAdd.size() <= 0)
             return;
         boolean needToUpdatePreviousLastItem = items.size() > 0 && recyclerView.getItemDecorationCount() > 0;
+        int previousLastItem = items.size() + getHeadersCount() - 1;
         int positionStart = items.size() + 1;
         int newItemsCount = collectionToAdd.size();
         items.addAll(collectionToAdd);
         if (needToUpdatePreviousLastItem)
-            notifyItemChanged(positionStart + getHeadersCount() - 1);
+            notifyItemChanged(previousLastItem);
         notifyItemRangeInserted(positionStart + getHeadersCount(), newItemsCount + getHeadersCount());
         dispatchCollectionChangedEvent();
     }

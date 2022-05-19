@@ -124,7 +124,7 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         public View view;
     }
 
-    
+
     public int getHeadersCount() {
         return mHeaderViewInfoList.size();
     }
@@ -158,7 +158,7 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
                 int positionToRemove = findAdapterPositionByView(v);
                 mFooterViewInfoList.remove(i);
                 if (positionToRemove != -1)
-                    notifyItemRemoved(i);
+                    notifyItemRemoved(positionToRemove);
                 return true;
             }
         }
