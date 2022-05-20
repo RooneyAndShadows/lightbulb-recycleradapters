@@ -7,8 +7,6 @@ import androidx.databinding.Bindable;
 import androidx.databinding.Observable;
 import androidx.databinding.PropertyChangeRegistry;
 
-import static com.github.rooneyandshadows.lightbulb.recycleradapters.BR.*;
-
 
 public abstract class EasyAdapterObservableDataModel extends EasyAdapterDataModel implements Observable {
     private final PropertyChangeRegistry callbacks = new PropertyChangeRegistry();
