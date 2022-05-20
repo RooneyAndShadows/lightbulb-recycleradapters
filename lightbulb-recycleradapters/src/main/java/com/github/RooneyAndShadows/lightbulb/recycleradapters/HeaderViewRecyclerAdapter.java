@@ -120,10 +120,16 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     }
 
     public static class FixedViewInfo {
-        public int viewType;
-        public View view;
-    }
+        public final int viewType;
+        public final View view;
+        public int localPosition;
 
+        public FixedViewInfo(int viewType, View view, int localPosition) {
+            this.viewType = viewType;
+            this.view = view;
+            this.localPosition = localPosition;
+        }
+    }
 
     public int getHeadersCount() {
         return mHeaderViewInfoList.size();
@@ -137,33 +143,6 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         return dataAdapter == null || dataAdapter.getItemCount() == 0;
     }
 
-    public boolean removeHeaderView(View v) {
-        for (int i = 0; i < mHeaderViewInfoList.size(); i++) {
-            FixedViewInfo info = mHeaderViewInfoList.get(i);
-            if (info.view == v) {
-                int positionToRemove = findAdapterPositionByView(v);
-                mHeaderViewInfoList.remove(i);
-                if (positionToRemove != -1)
-                    notifyItemRemoved(positionToRemove);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean removeFooterView(View v) {
-        for (int i = 0; i < mFooterViewInfoList.size(); i++) {
-            FixedViewInfo info = mFooterViewInfoList.get(i);
-            if (info.view == v) {
-                int positionToRemove = findAdapterPositionByView(v);
-                mFooterViewInfoList.remove(i);
-                if (positionToRemove != -1)
-                    notifyItemRemoved(positionToRemove);
-                return true;
-            }
-        }
-        return false;
-    }
 
     public void removeAllHeaderView() {
         if (!mHeaderViewInfoList.isEmpty()) {
@@ -184,33 +163,58 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     }
 
     public void addHeaderView(View view) {
-        if (null == view) {
-            throw new IllegalArgumentException("the view to add must not be null");
-        }
-        final FixedViewInfo info = new FixedViewInfo();
-        info.view = view;
-        info.viewType = BASE_HEADER_VIEW_TYPE + mHeaderViewInfoList.size();
+        if (null == view) throw new IllegalArgumentException("the view to add must not be null");
+        int positionToAdd = getHeadersCount();
+        final FixedViewInfo info = new FixedViewInfo(BASE_HEADER_VIEW_TYPE + mHeaderViewInfoList.size(), view, positionToAdd);
         mHeaderViewInfoList.add(info);
-        notifyItemInserted(getHeadersCount());
+        refreshHeaderPositions();
+        notifyItemInserted(positionToAdd);
+    }
+
+    public boolean removeHeaderView(View v) {
+        for (int i = 0; i < mHeaderViewInfoList.size(); i++) {
+            FixedViewInfo info = mHeaderViewInfoList.get(i);
+            if (info.view == v) {
+                int positionToRemove = info.localPosition;
+                mHeaderViewInfoList.remove(i);
+                refreshHeaderPositions();
+                if (positionToRemove != -1)
+                    notifyItemRemoved(positionToRemove);
+                return true;
+            }
+        }
+        return false;
     }
 
     public void addFooterView(View view) {
-        if (null == view) {
-            throw new IllegalArgumentException("the view to add must not be null!");
-        }
-        final FixedViewInfo info = new FixedViewInfo();
-        info.view = view;
-        info.viewType = BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList.size();
+        if (null == view) throw new IllegalArgumentException("the view to add must not be null!");
+        int positionToAdd = getHeadersCount() + dataAdapter.getItemCount() + getFootersCount();
+        int localPosition = getFootersCount();
+        final FixedViewInfo info = new FixedViewInfo(BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList.size(), view, localPosition);
         mFooterViewInfoList.add(info);
-        notifyItemInserted(getHeadersCount() + dataAdapter.getItemCount() + getFootersCount());
+        refreshFooterPositions();
+        notifyItemInserted(positionToAdd);
+    }
+
+    public boolean removeFooterView(View v) {
+        for (int i = 0; i < mFooterViewInfoList.size(); i++) {
+            FixedViewInfo info = mFooterViewInfoList.get(i);
+            if (info.view == v) {
+                int positionToRemove = getHeadersCount() + dataAdapter.getItemCount() + info.localPosition;
+                mFooterViewInfoList.remove(i);
+                refreshFooterPositions();
+                if (positionToRemove != -1)
+                    notifyItemRemoved(positionToRemove);
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean containsFooterView(View v) {
         for (int i = 0; i < mFooterViewInfoList.size(); i++) {
             FixedViewInfo info = mFooterViewInfoList.get(i);
-            if (info.view == v) {
-                return true;
-            }
+            if (info.view == v) return true;
         }
         return false;
     }
@@ -218,29 +222,39 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     public boolean containsHeaderView(View v) {
         for (int i = 0; i < mHeaderViewInfoList.size(); i++) {
             FixedViewInfo info = mHeaderViewInfoList.get(i);
-            if (info.view == v) {
-                return true;
-            }
+            if (info.view == v) return true;
         }
         return false;
     }
 
     public void setHeaderVisibility(boolean shouldShow) {
-        for (FixedViewInfo fixedViewInfo : mHeaderViewInfoList) {
+        for (FixedViewInfo fixedViewInfo : mHeaderViewInfoList)
             fixedViewInfo.view.setVisibility(shouldShow ? View.VISIBLE : View.GONE);
-        }
         List<Integer> positionsToChange = findHeaderPositions();
         if (positionsToChange.size() > 0)
             notifyItemRangeChanged(positionsToChange.get(0), positionsToChange.size());
     }
 
     public void setFooterVisibility(boolean shouldShow) {
-        for (FixedViewInfo fixedViewInfo : mFooterViewInfoList) {
+        for (FixedViewInfo fixedViewInfo : mFooterViewInfoList)
             fixedViewInfo.view.setVisibility(shouldShow ? View.VISIBLE : View.GONE);
-        }
         List<Integer> positionsToChange = findFooterPositions();
         if (positionsToChange.size() > 0)
             notifyItemRangeChanged(positionsToChange.get(0), positionsToChange.size());
+    }
+
+    private void refreshFooterPositions() {
+        for (int position = 0; position < mFooterViewInfoList.size(); position++) {
+            FixedViewInfo info = mFooterViewInfoList.get(position);
+            info.localPosition = position;
+        }
+    }
+
+    private void refreshHeaderPositions() {
+        for (int position = 0; position < mHeaderViewInfoList.size(); position++) {
+            FixedViewInfo info = mHeaderViewInfoList.get(position);
+            info.localPosition = position;
+        }
     }
 
     private boolean isHeaderViewType(int viewType) {
