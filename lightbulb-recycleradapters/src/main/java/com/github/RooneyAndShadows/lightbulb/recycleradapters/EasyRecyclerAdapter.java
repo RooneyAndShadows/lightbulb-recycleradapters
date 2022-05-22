@@ -161,7 +161,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         int newItemsCount = collectionToAdd.size();
         items.addAll(collectionToAdd);
         if (needToUpdatePreviousLastItem)
-            notifyItemChanged(previousLastItem);
+            notifyItemChanged(previousLastItem, false); // update last item decoration without animation
         notifyItemRangeInserted(positionStart + getHeadersCount(), newItemsCount + getHeadersCount());
         dispatchCollectionChangedEvent();
     }
@@ -178,7 +178,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         int previousLastPosition = items.size() + getHeadersCount() - 1;
         items.add(item);
         if (needToUpdatePreviousLastItem)
-            notifyItemChanged(previousLastPosition);
+            notifyItemChanged(previousLastPosition, false); // update last item decoration without animation
         notifyItemInserted(items.size() + getHeadersCount() - 1);
         dispatchCollectionChangedEvent();
     }
