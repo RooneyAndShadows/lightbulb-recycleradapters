@@ -560,7 +560,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
                 items.get(posToUnselect).setSelected(false);
         if (notifyForSelectionChange)
             for (int position : selectedPositions)
-                notifyItemChanged(position + getHeadersCount());
+                notifyItemChanged(position + getHeadersCount(), false);
         List<Integer> affectedPositions = new ArrayList<>(selectedPositions);
         selectedPositions.clear();
         return affectedPositions;
@@ -584,7 +584,7 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         }
         items.get(position).setSelected(newState);
         if (notifyForSelectionChange)
-            notifyItemChanged(position + getHeadersCount());
+            notifyItemChanged(position + getHeadersCount(), false);
     }
 
 
