@@ -29,6 +29,6 @@ class EasyRecyclerAdapterUpdateCallback implements ListUpdateCallback {
 
     @Override
     public void onChanged(int position, int count, Object payload) {
-        adapter.notifyItemRangeChanged(position + offset, count, false);
+        adapter.notifyItemRangeChanged(position + offset, count);
     }
 }
