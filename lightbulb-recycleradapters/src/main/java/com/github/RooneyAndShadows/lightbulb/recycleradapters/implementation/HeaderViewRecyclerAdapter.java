@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction;
+package com.github.rooneyandshadows.lightbulb.recycleradapters.implementation;
 
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 @SuppressWarnings({"rawtypes", "unused", "unchecked"})
-class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
+public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     private static final int BASE_HEADER_VIEW_TYPE = -1 << 10;
     private static final int BASE_FOOTER_VIEW_TYPE = -1 << 11;
     private final List<FixedViewInfo> mHeaderViewInfoList;
