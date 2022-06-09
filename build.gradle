@@ -10,7 +10,8 @@ buildscript {
                 android_appcompat   : "1.4.1",
                 android_recyclerview: "1.2.1",
                 lightbulb           : [
-                        commons: "1.0.6"
+                        commons       : "1.0.6",
+                        selectableview: "1.0.2",
                 ],
                 java                : [
                         commons: "1.0.6"

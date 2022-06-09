@@ -1,10 +1,10 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters;
+package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 
-import com.github.rooneyandshadows.lightbulb.recycleradapters.callbacks.EasyAdapterCollectionChangedListener;
-import com.github.rooneyandshadows.lightbulb.recycleradapters.callbacks.EasyAdapterSelectionChangedListener;
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.callbacks.EasyAdapterCollectionChangedListener;
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.callbacks.EasyAdapterSelectionChangedListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,17 +12,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.lifecycle.DefaultLifecycleObserver;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.recyclerview.widget.AsyncListDiffer;
 import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
 
-import static com.github.rooneyandshadows.lightbulb.recycleradapters.EasyAdapterSelectableModes.*;
+import static com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*;
 
 @SuppressWarnings("unused")
 public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel> extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements DefaultLifecycleObserver {

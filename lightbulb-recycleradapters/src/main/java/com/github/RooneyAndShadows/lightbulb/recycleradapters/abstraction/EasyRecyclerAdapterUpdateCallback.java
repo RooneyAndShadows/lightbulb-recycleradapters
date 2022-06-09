@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters;
+package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction;
 
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;

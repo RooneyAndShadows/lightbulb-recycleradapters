@@ -1,7 +1,9 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters;
+package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction;
 
 import android.os.Parcel;
 
+
+import com.github.rooneyandshadows.lightbulb.recycleradapters.BR;
 
 import androidx.databinding.Bindable;
 import androidx.databinding.Observable;

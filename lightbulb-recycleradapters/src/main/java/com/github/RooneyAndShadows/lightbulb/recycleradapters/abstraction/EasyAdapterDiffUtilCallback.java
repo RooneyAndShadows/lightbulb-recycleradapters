@@ -1,10 +1,8 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters;
+package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction;
 
 import java.util.List;
 
 import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.ListUpdateCallback;
-import androidx.recyclerview.widget.RecyclerView;
 
 final class EasyAdapterDiffUtilCallback<T extends EasyAdapterDataModel> extends DiffUtil.Callback {
     private final List<T> oldData;
