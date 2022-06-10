@@ -8,4 +8,5 @@
     android:paddingEnd="@dimen/checkable_adapter_item_horizontal_padding"
     android:paddingBottom="@dimen/checkable_adapter_item_vertical_padding"
     app:RBV_IconPadding="0dp"
-    app:RBV_TextSpacing="0dp" />
+    app:RBV_IconScaleType="center"
+    app:RBV_TextSpacing="@dimen/checkable_adapter_item_text_spacing" />

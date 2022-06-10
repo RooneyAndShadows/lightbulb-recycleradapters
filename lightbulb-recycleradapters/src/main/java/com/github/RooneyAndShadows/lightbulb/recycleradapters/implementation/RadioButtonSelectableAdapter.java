@@ -26,6 +26,9 @@ public class RadioButtonSelectableAdapter<ItemType extends EasyAdapterDataModel>
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         RadioButtonView v = (RadioButtonView) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.layout_radio_button, parent, false);
+        int[] padding = getItemPadding();
+        if (padding != null && padding.length == 4)
+            v.setPadding(padding[0], padding[1], padding[2], padding[3]);
         return new RadioButtonViewHolder(v);
     }
 
@@ -56,6 +59,15 @@ public class RadioButtonSelectableAdapter<ItemType extends EasyAdapterDataModel>
     }
 
     protected Drawable getItemIconBackground(ItemType item) {
+        return null;
+    }
+
+    /**
+     * Defines padding for the item view.
+     *
+     * @return int[] {left,top,right,bottom}
+     */
+    protected int[] getItemPadding() {
         return null;
     }
 

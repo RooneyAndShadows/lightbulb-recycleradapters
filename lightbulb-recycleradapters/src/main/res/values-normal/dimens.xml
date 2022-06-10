@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="checkable_adapter_item_horizontal_padding">15dp</dimen>
-    <dimen name="checkable_adapter_item_vertical_padding">10dp</dimen>
+    <dimen name="checkable_adapter_item_vertical_padding">5dp</dimen>
+    <dimen name="checkable_adapter_item_text_spacing">7dp</dimen>
 </resources>

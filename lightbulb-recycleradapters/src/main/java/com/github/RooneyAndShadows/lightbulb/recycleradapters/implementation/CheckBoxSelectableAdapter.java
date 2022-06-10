@@ -27,6 +27,9 @@ public class CheckBoxSelectableAdapter<ItemType extends EasyAdapterDataModel> ex
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         CheckBoxView v = (CheckBoxView) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.layout_checkbox_button, parent, false);
+        int[] padding = getItemPadding();
+        if (padding != null && padding.length == 4)
+            v.setPadding(padding[0], padding[1], padding[2], padding[3]);
         return new CheckBoxViewHolder(v, this);
     }
 
@@ -57,6 +60,15 @@ public class CheckBoxSelectableAdapter<ItemType extends EasyAdapterDataModel> ex
     }
 
     protected Drawable getItemIconBackground(ItemType item) {
+        return null;
+    }
+
+    /**
+     * Defines padding for the item view.
+     *
+     * @return int[] {left,top,right,bottom}
+     */
+    protected int[] getItemPadding() {
         return null;
     }
 
