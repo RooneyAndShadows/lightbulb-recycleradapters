@@ -3,7 +3,7 @@
 buildscript {
     ext {
         versions = [
-                kotlin              : "1.6.10",
+                kotlin              : "1.6.21",
                 ktx                 : [
                         core: "1.7.0"
                 ],
@@ -11,7 +11,7 @@ buildscript {
                 android_recyclerview: "1.2.1",
                 lightbulb           : [
                         commons       : "1.0.6",
-                        selectableview: "1.0.2",
+                        selectableview: "1.0.3",
                 ],
                 java                : [
                         commons: "1.0.6"
