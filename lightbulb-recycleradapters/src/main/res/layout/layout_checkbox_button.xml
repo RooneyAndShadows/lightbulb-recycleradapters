@@ -4,8 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingStart="@dimen/checkable_adapter_item_horizontal_padding"
-    android:paddingEnd="@dimen/checkable_adapter_item_horizontal_padding"
     android:paddingTop="@dimen/checkable_adapter_item_vertical_padding"
+    android:paddingEnd="@dimen/checkable_adapter_item_horizontal_padding"
     android:paddingBottom="@dimen/checkable_adapter_item_vertical_padding"
     app:CBV_IconScaleType="center"
-    app:CBV_TextSpacing="@dimen/checkable_adapter_item_text_spacing" />
+    app:CBV_TextSpacing="@dimen/checkable_adapter_item_text_spacing"
+    app:RBV_IconSpacing="@dimen/checkable_adapter_item_text_spacing" />
