@@ -296,7 +296,6 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
      * @param notifyChange - whether to notify registered observers in case of change.
      */
     public void selectItem(ItemType targetItem, boolean newState, boolean notifyChange) {
-        //int index = getPosition(item);
         int index = items.indexOf(targetItem);
         if (index == -1)
             return;
@@ -346,11 +345,14 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
     }
 
     /**
-     * Used to select items corresponding to array of positions in the adapter.
+     * * Used to select items corresponding to array of positions in the adapter.
      *
-     * @param positions - positions to be selected
+     * @param positions   - positions to be selected
+     * @param newState    - new selected state for the positions
+     * @param incremental - Indicates whether the selection is applied incremental or initial.
+     *                    Important: Parameter is taken in account only when using multiple selection {@link EasyAdapterSelectableModes}.
      */
-    public void selectPositions(int[] positions) {
+    public void selectPositions(int[] positions, boolean newState, boolean incremental) {
         if (selectableMode.equals(SELECT_NONE))
             return;
         if (positions == null || positions.length <= 0) {
@@ -362,19 +364,35 @@ public abstract class EasyRecyclerAdapter<ItemType extends EasyAdapterDataModel>
         }
         if (selectableMode.equals(SELECT_SINGLE)) {
             int targetPosition = positions[0];
-            if (!positionExists(targetPosition) || isItemSelected(targetPosition))
+            if (!positionExists(targetPosition) || newState == isItemSelected(targetPosition))
                 return;
             clearSelectionInternally(true);
-            selectInternally(targetPosition, true, true);
+            selectInternally(targetPosition, newState, true);
             dispatchSelectionChangedEvent();
         }
         if (selectableMode.equals(SELECT_MULTIPLE)) {
             boolean selectionChanged = false;
-            for (int targetPosition : positions) {
-                if (!positionExists(targetPosition) || isItemSelected(targetPosition))
-                    continue;
-                selectionChanged = true;
-                selectInternally(targetPosition, true, true);
+            if (incremental) {
+                for (int targetPosition : positions) {
+                    if (!positionExists(targetPosition) || newState == isItemSelected(targetPosition))
+                        continue;
+                    selectionChanged = true;
+                    selectInternally(targetPosition, newState, true);
+                }
+            } else {
+                for (int currentItemPosition = 0; currentItemPosition < items.size(); currentItemPosition++) {
+                    boolean newStateForPosition = isItemSelected(currentItemPosition);
+                    for (int targetPosition : positions) {
+                        if (currentItemPosition == targetPosition) {
+                            newStateForPosition = newState;
+                            break;
+                        }
+                    }
+                    if (!positionExists(currentItemPosition) || newStateForPosition == isItemSelected(currentItemPosition))
+                        continue;
+                    selectInternally(currentItemPosition, newStateForPosition, true);
+                    selectionChanged = true;
+                }
             }
             if (selectionChanged)
                 dispatchSelectionChangedEvent();

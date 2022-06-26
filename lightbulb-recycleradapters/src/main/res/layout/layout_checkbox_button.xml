@@ -9,4 +9,4 @@
     android:paddingBottom="@dimen/checkable_adapter_item_vertical_padding"
     app:CBV_IconScaleType="center"
     app:CBV_TextSpacing="@dimen/checkable_adapter_item_text_spacing"
-    app:RBV_IconSpacing="@dimen/checkable_adapter_item_text_spacing" />
+    app:CBV_IconSpacing="@dimen/checkable_adapter_item_text_spacing" />
