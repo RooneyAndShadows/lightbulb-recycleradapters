@@ -43,12 +43,12 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (isHeaderViewType(viewType)) {
             int headerIndex = Math.abs(viewType - BASE_HEADER_VIEW_TYPE);
-            View headerView = mHeaderViewInfoList.get(headerIndex).view;
-            return createHeaderFooterViewHolder(headerView);
+            FixedViewInfo info = mHeaderViewInfoList.get(headerIndex);
+            return createHeaderFooterViewHolder(info.view, info.viewListeners);
         } else if (isFooterViewType(viewType)) {
             int footerIndex = Math.abs(viewType - BASE_FOOTER_VIEW_TYPE);
-            View footerView = mFooterViewInfoList.get(footerIndex).view;
-            return createHeaderFooterViewHolder(footerView);
+            FixedViewInfo info = mHeaderViewInfoList.get(footerIndex);
+            return createHeaderFooterViewHolder(info.view, info.viewListeners);
         } else {
             return dataAdapter.onCreateViewHolder(parent, viewType);
         }
@@ -123,12 +123,18 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         public final int viewType;
         public final View view;
         public int localPosition;
+        public ViewListeners viewListeners;
 
-        public FixedViewInfo(int viewType, View view, int localPosition) {
+        public FixedViewInfo(int viewType, View view, int localPosition, ViewListeners viewListeners) {
             this.viewType = viewType;
             this.view = view;
             this.localPosition = localPosition;
+            this.viewListeners = viewListeners;
         }
+    }
+
+    public interface ViewListeners {
+        void onCreated(View view);
     }
 
     public int getHeadersCount() {
@@ -163,9 +169,13 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     }
 
     public void addHeaderView(View view) {
+        addHeaderView(view, null);
+    }
+
+    public void addHeaderView(View view, ViewListeners viewListeners) {
         if (null == view) throw new IllegalArgumentException("the view to add must not be null");
         int positionToAdd = getHeadersCount();
-        final FixedViewInfo info = new FixedViewInfo(BASE_HEADER_VIEW_TYPE + mHeaderViewInfoList.size(), view, positionToAdd);
+        final FixedViewInfo info = new FixedViewInfo(BASE_HEADER_VIEW_TYPE + mHeaderViewInfoList.size(), view, positionToAdd, viewListeners);
         mHeaderViewInfoList.add(info);
         refreshHeaderPositions();
         notifyItemInserted(positionToAdd);
@@ -187,10 +197,14 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
     }
 
     public void addFooterView(View view) {
+        addFooterView(view, null);
+    }
+
+    public void addFooterView(View view, ViewListeners viewListeners) {
         if (null == view) throw new IllegalArgumentException("the view to add must not be null!");
         int positionToAdd = getHeadersCount() + dataAdapter.getItemCount() + getFootersCount();
         int localPosition = getFootersCount();
-        final FixedViewInfo info = new FixedViewInfo(BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList.size(), view, localPosition);
+        final FixedViewInfo info = new FixedViewInfo(BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList.size(), view, localPosition, viewListeners);
         mFooterViewInfoList.add(info);
         refreshFooterPositions();
         notifyItemInserted(positionToAdd);
@@ -298,7 +312,7 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
         return footerPositions;
     }
 
-    private RecyclerView.ViewHolder createHeaderFooterViewHolder(View view) {
+    private RecyclerView.ViewHolder createHeaderFooterViewHolder(View view, ViewListeners listeners) {
         if (mIsStaggeredGrid) {
             StaggeredGridLayoutManager.LayoutParams layoutParams = new StaggeredGridLayoutManager.LayoutParams(
                     StaggeredGridLayoutManager.LayoutParams.MATCH_PARENT, StaggeredGridLayoutManager.LayoutParams.WRAP_CONTENT);
@@ -309,7 +323,8 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
                     RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT);
             view.setLayoutParams(layoutParams);
         }
-
+        if (listeners != null)
+            listeners.onCreated(view);
         return new RecyclerView.ViewHolder(view) {
         };
     }
