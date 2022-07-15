@@ -47,7 +47,7 @@ public class HeaderViewRecyclerAdapter extends RecyclerView.Adapter {
             return createHeaderFooterViewHolder(info.view, info.viewListeners);
         } else if (isFooterViewType(viewType)) {
             int footerIndex = Math.abs(viewType - BASE_FOOTER_VIEW_TYPE);
-            FixedViewInfo info = mHeaderViewInfoList.get(footerIndex);
+            FixedViewInfo info = mFooterViewInfoList.get(footerIndex);
             return createHeaderFooterViewHolder(info.view, info.viewListeners);
         } else {
             return dataAdapter.onCreateViewHolder(parent, viewType);
