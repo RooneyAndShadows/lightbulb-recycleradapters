@@ -3,14 +3,14 @@
 buildscript {
     ext {
         versions = [
-                kotlin              : "1.6.21",
+                kotlin              : "1.7.10",
                 ktx                 : [
-                        core: "1.7.0"
+                        core: "1.9.0"
                 ],
-                android_appcompat   : "1.4.1",
+                android_appcompat   : "1.5.1",
                 android_recyclerview: "1.2.1",
                 lightbulb           : [
-                        commons       : "1.0.6",
+                        commons       : "1.0.18",
                         selectableview: "1.0.3",
                 ],
                 java                : [
@@ -28,7 +28,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.0.4"
+        classpath 'com.android.tools.build:gradle:7.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
 
         // NOTE: Do not place your application dependencies here; they belong
