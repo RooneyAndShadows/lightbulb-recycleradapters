@@ -5,15 +5,13 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.github.rooneyandshadows.lightbulb.recycleradapters.R
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterConfiguration
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterDataModel
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
 import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView
 
-class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel?> : EasyRecyclerAdapter<ItemType?>(
-    EasyAdapterConfiguration<ItemType>().withSelectMode(EasyAdapterSelectableModes.SELECT_MULTIPLE)
-) {
+@Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
+abstract class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>(SELECT_MULTIPLE) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val v = LayoutInflater.from(parent.context)
             .inflate(R.layout.layout_checkbox_button, parent, false) as CheckBoxView
@@ -27,29 +25,31 @@ class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel?> : EasyRecycler
         return CheckBoxViewHolder(v, this)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val vHolder: CheckBoxViewHolder = holder as CheckBoxViewHolder
+        val vHolder: CheckBoxViewHolder = holder as CheckBoxSelectableAdapter<ItemType>.CheckBoxViewHolder
         vHolder.bindItem()
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
-        val vh: CheckBoxViewHolder = holder as CheckBoxViewHolder
+        val vh: CheckBoxViewHolder = holder as CheckBoxSelectableAdapter<ItemType>.CheckBoxViewHolder
         vh.recycle()
     }
 
     override fun getItemCount(): Int {
-        return items!!.size
+        return items.size
     }
 
-    override fun getItemName(item: ItemType?): String? {
-        return item.getItemName()
+    override fun getItemName(item: ItemType): String? {
+        return item.itemName
     }
 
-    protected fun getItemIcon(item: ItemType?): Drawable? {
+    protected fun getItemIcon(item: ItemType): Drawable? {
         return null
     }
 
-    protected fun getItemIconBackground(item: ItemType?): Drawable? {
+    protected fun getItemIconBackground(item: ItemType): Drawable? {
         return null
     }
 
@@ -59,7 +59,7 @@ class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel?> : EasyRecycler
      * @return int[] {left,top,right,bottom}
      */
     protected val itemPadding: IntArray?
-        protected get() = null
+        get() = null
 
     inner class CheckBoxViewHolder internal constructor(
         categoryItemBinding: CheckBoxView?,
@@ -67,15 +67,16 @@ class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel?> : EasyRecycler
     ) : RecyclerView.ViewHolder(
         categoryItemBinding!!
     ) {
-        protected var selectableView: CheckBoxView
-        protected var item: ItemType? = null
+        private var selectableView: CheckBoxView = itemView as CheckBoxView
+        private var item: ItemType? = null
+
         fun bindItem() {
-            item = getItem(bindingAdapterPosition)
-            val isSelectedInAdapter = isItemSelected(item)
+            item = getItem(bindingAdapterPosition) ?: return
+            val isSelectedInAdapter = isItemSelected(item!!)
             if (selectableView.isChecked != isSelectedInAdapter) selectableView.isChecked =
                 isSelectedInAdapter
-            selectableView.text = getItemName(item)
-            selectableView.setIcon(getItemIcon(item), getItemIconBackground(item))
+            selectableView.text = getItemName(item!!)
+            selectableView.setIcon(getItemIcon(item!!), getItemIconBackground(item!!))
         }
 
         fun recycle() {
@@ -83,8 +84,7 @@ class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel?> : EasyRecycler
         }
 
         init {
-            selectableView = itemView as CheckBoxView
-            selectableView.setOnCheckedListener { view: CheckBoxView?, isChecked: Boolean ->
+            selectableView.setOnCheckedListener { _: CheckBoxView?, isChecked: Boolean ->
                 selectableView.post {
                     adapter.selectItemAt(
                         bindingAdapterPosition, isChecked

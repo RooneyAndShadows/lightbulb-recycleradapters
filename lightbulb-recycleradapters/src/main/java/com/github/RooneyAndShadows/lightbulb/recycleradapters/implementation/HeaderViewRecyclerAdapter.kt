@@ -5,17 +5,20 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import kotlin.math.abs
 
+@Suppress("unused")
 class HeaderViewRecyclerAdapter @JvmOverloads constructor(
     private val recyclerView: RecyclerView,
     headerViewInfoList: MutableList<FixedViewInfo>? = null,
     footerViewInfoList: MutableList<FixedViewInfo>? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private var mHeaderViewInfoList: MutableList<FixedViewInfo>? = null
-    private var mFooterViewInfoList: MutableList<FixedViewInfo>? = null
+    private val mHeaderViewInfoList: MutableList<FixedViewInfo> = headerViewInfoList ?: mutableListOf()
+    private val mFooterViewInfoList: MutableList<FixedViewInfo> = footerViewInfoList ?: mutableListOf()
     var adapter: RecyclerView.Adapter<RecyclerView.ViewHolder>? = null
         private set
     private var mIsStaggeredGrid = false
+
     fun setDataAdapter(dataAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder>) {
         adapter = dataAdapter
         setHasStableIds(dataAdapter.hasStableIds())
@@ -23,14 +26,12 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (isHeaderViewType(viewType)) {
-            val headerIndex =
-                Math.abs(viewType - BASE_HEADER_VIEW_TYPE)
-            val info = mHeaderViewInfoList!![headerIndex]
+            val headerIndex = abs(viewType - BASE_HEADER_VIEW_TYPE)
+            val info = mHeaderViewInfoList[headerIndex]
             createHeaderFooterViewHolder(info.view, info.viewListeners)
         } else if (isFooterViewType(viewType)) {
-            val footerIndex =
-                Math.abs(viewType - BASE_FOOTER_VIEW_TYPE)
-            val info = mFooterViewInfoList!![footerIndex]
+            val footerIndex = abs(viewType - BASE_FOOTER_VIEW_TYPE)
+            val info = mFooterViewInfoList[footerIndex]
             createHeaderFooterViewHolder(info.view, info.viewListeners)
         } else {
             adapter!!.onCreateViewHolder(parent, viewType)
@@ -38,9 +39,8 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (position < headersCount || position >= headersCount + adapter!!.itemCount) {
+        if (position < headersCount || position >= headersCount + adapter!!.itemCount)
             return
-        }
         adapter!!.onBindViewHolder(holder, position - headersCount)
     }
 
@@ -55,9 +55,9 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
 
     override fun getItemViewType(position: Int): Int {
         return if (isHeaderPosition(position)) {
-            mHeaderViewInfoList!![position].viewType
+            mHeaderViewInfoList[position].viewType
         } else if (isFooterPosition(position)) {
-            mFooterViewInfoList!![position - adapter!!.itemCount - headersCount].viewType
+            mFooterViewInfoList[position - adapter!!.itemCount - headersCount].viewType
         } else {
             adapter!!.getItemViewType(position - headersCount)
         }
@@ -68,9 +68,8 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
     }
 
     override fun getItemId(position: Int): Long {
-        return if (isFooterPosition(position) || isHeaderPosition(position)) position.toLong() else adapter!!.getItemId(
-            position
-        )
+        return if (isFooterPosition(position) || isHeaderPosition(position)) position.toLong()
+        else adapter!!.getItemId(position)
     }
 
     override fun registerAdapterDataObserver(observer: RecyclerView.AdapterDataObserver) {
@@ -105,17 +104,17 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
     }
 
     val headersCount: Int
-        get() = mHeaderViewInfoList!!.size
+        get() = mHeaderViewInfoList.size
     val footersCount: Int
-        get() = mFooterViewInfoList!!.size
+        get() = mFooterViewInfoList.size
     val isEmpty: Boolean
         get() = adapter == null || adapter!!.itemCount == 0
 
     fun removeAllHeaderView() {
-        if (!mHeaderViewInfoList!!.isEmpty()) {
+        if (mHeaderViewInfoList.isNotEmpty()) {
             val positionsToRemove = findHeaderPositions()
-            mHeaderViewInfoList!!.clear()
-            if (positionsToRemove.size > 0) notifyItemRangeRemoved(
+            mHeaderViewInfoList.clear()
+            if (positionsToRemove.isNotEmpty()) notifyItemRangeRemoved(
                 positionsToRemove[0],
                 positionsToRemove.size
             )
@@ -123,13 +122,14 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
     }
 
     fun removeAllFooterView() {
-        if (!mFooterViewInfoList!!.isEmpty()) {
+        if (mFooterViewInfoList.isNotEmpty()) {
             val positionsToRemove = findFooterPositions()
-            mFooterViewInfoList!!.clear()
-            if (positionsToRemove.size > 0) notifyItemRangeRemoved(
-                positionsToRemove[0],
-                positionsToRemove.size
-            )
+            mFooterViewInfoList.clear()
+            if (positionsToRemove.isNotEmpty())
+                notifyItemRangeRemoved(
+                    positionsToRemove[0],
+                    positionsToRemove.size
+                )
         }
     }
 
@@ -138,24 +138,25 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
         requireNotNull(view) { "the view to add must not be null" }
         val positionToAdd = headersCount
         val info = FixedViewInfo(
-            BASE_HEADER_VIEW_TYPE + mHeaderViewInfoList!!.size,
+            BASE_HEADER_VIEW_TYPE + mHeaderViewInfoList.size,
             view,
             positionToAdd,
             viewListeners
         )
-        mHeaderViewInfoList!!.add(info)
+        mHeaderViewInfoList.add(info)
         refreshHeaderPositions()
         notifyItemInserted(positionToAdd)
     }
 
     fun removeHeaderView(v: View): Boolean {
-        for (i in mHeaderViewInfoList!!.indices) {
-            val info = mHeaderViewInfoList!![i]
+        for (i in mHeaderViewInfoList.indices) {
+            val info = mHeaderViewInfoList[i]
             if (info.view === v) {
                 val positionToRemove = info.localPosition
-                mHeaderViewInfoList!!.removeAt(i)
+                mHeaderViewInfoList.removeAt(i)
                 refreshHeaderPositions()
-                if (positionToRemove != -1) notifyItemRemoved(positionToRemove)
+                if (positionToRemove != -1)
+                    notifyItemRemoved(positionToRemove)
                 return true
             }
         }
@@ -168,22 +169,22 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
         val positionToAdd = headersCount + adapter!!.itemCount + footersCount
         val localPosition = footersCount
         val info = FixedViewInfo(
-            BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList!!.size,
+            BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList.size,
             view,
             localPosition,
             viewListeners
         )
-        mFooterViewInfoList!!.add(info)
+        mFooterViewInfoList.add(info)
         refreshFooterPositions()
         notifyItemInserted(positionToAdd)
     }
 
     fun removeFooterView(v: View): Boolean {
-        for (i in mFooterViewInfoList!!.indices) {
-            val info = mFooterViewInfoList!![i]
+        for (i in mFooterViewInfoList.indices) {
+            val info = mFooterViewInfoList[i]
             if (info.view === v) {
                 val positionToRemove = headersCount + adapter!!.itemCount + info.localPosition
-                mFooterViewInfoList!!.removeAt(i)
+                mFooterViewInfoList.removeAt(i)
                 refreshFooterPositions()
                 if (positionToRemove != -1) notifyItemRemoved(positionToRemove)
                 return true
@@ -193,71 +194,71 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
     }
 
     fun containsFooterView(v: View): Boolean {
-        for (i in mFooterViewInfoList!!.indices) {
-            val info = mFooterViewInfoList!![i]
+        for (i in mFooterViewInfoList.indices) {
+            val info = mFooterViewInfoList[i]
             if (info.view === v) return true
         }
         return false
     }
 
     fun containsHeaderView(v: View): Boolean {
-        for (i in mHeaderViewInfoList!!.indices) {
-            val info = mHeaderViewInfoList!![i]
+        for (i in mHeaderViewInfoList.indices) {
+            val info = mHeaderViewInfoList[i]
             if (info.view === v) return true
         }
         return false
     }
 
     fun setHeaderVisibility(shouldShow: Boolean) {
-        for (fixedViewInfo in mHeaderViewInfoList!!) fixedViewInfo.view.visibility =
+        for (fixedViewInfo in mHeaderViewInfoList) fixedViewInfo.view.visibility =
             if (shouldShow) View.VISIBLE else View.GONE
         val positionsToChange = findHeaderPositions()
-        if (positionsToChange.size > 0) notifyItemRangeChanged(
+        if (positionsToChange.isNotEmpty()) notifyItemRangeChanged(
             positionsToChange[0],
             positionsToChange.size
         )
     }
 
     fun setFooterVisibility(shouldShow: Boolean) {
-        for (fixedViewInfo in mFooterViewInfoList!!) fixedViewInfo.view.visibility =
+        for (fixedViewInfo in mFooterViewInfoList) fixedViewInfo.view.visibility =
             if (shouldShow) View.VISIBLE else View.GONE
         val positionsToChange = findFooterPositions()
-        if (positionsToChange.size > 0) notifyItemRangeChanged(
+        if (positionsToChange.isNotEmpty()) notifyItemRangeChanged(
             positionsToChange[0],
             positionsToChange.size
         )
     }
 
     private fun refreshFooterPositions() {
-        for (position in mFooterViewInfoList!!.indices) {
-            val info = mFooterViewInfoList!![position]
+        for (position in mFooterViewInfoList.indices) {
+            val info = mFooterViewInfoList[position]
             info.localPosition = position
         }
     }
 
     private fun refreshHeaderPositions() {
-        for (position in mHeaderViewInfoList!!.indices) {
-            val info = mHeaderViewInfoList!![position]
+        for (position in mHeaderViewInfoList.indices) {
+            val info = mHeaderViewInfoList[position]
             info.localPosition = position
         }
     }
 
     private fun isHeaderViewType(viewType: Int): Boolean {
         return (viewType >= BASE_HEADER_VIEW_TYPE
-                && viewType < BASE_HEADER_VIEW_TYPE + mHeaderViewInfoList!!.size)
+                && viewType < BASE_HEADER_VIEW_TYPE + mHeaderViewInfoList.size)
     }
 
     private fun isFooterViewType(viewType: Int): Boolean {
         return (viewType >= BASE_FOOTER_VIEW_TYPE
-                && viewType < BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList!!.size)
+                && viewType < BASE_FOOTER_VIEW_TYPE + mFooterViewInfoList.size)
     }
 
     private fun isHeaderPosition(position: Int): Boolean {
-        return position < mHeaderViewInfoList!!.size
+        return position < mHeaderViewInfoList.size
     }
 
     private fun isFooterPosition(position: Int): Boolean {
-        return position >= mHeaderViewInfoList!!.size + adapter!!.itemCount
+        return position >= mHeaderViewInfoList.size + adapter!!.itemCount
     }
 
     private fun findAdapterPositionByView(view: View): Int {
@@ -320,14 +321,5 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
     companion object {
         private const val BASE_HEADER_VIEW_TYPE = -1 shl 10
         private const val BASE_FOOTER_VIEW_TYPE = -1 shl 11
-    }
-
-    init {
-        mHeaderViewInfoList =
-            headerViewInfoList
-                ?: ArrayList()
-        mFooterViewInfoList =
-            footerViewInfoList
-                ?: ArrayList()
     }
 }
