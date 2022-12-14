@@ -38,7 +38,7 @@ abstract class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : Easy
     }
 
     override fun getItemCount(): Int {
-        return items.size
+        return getItems().size
     }
 
     override fun getItemName(item: ItemType): String? {
@@ -86,9 +86,7 @@ abstract class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : Easy
         init {
             selectableView.setOnCheckedListener { _: CheckBoxView?, isChecked: Boolean ->
                 selectableView.post {
-                    adapter.selectItemAt(
-                        bindingAdapterPosition, isChecked
-                    )
+                    adapter.selectItemAt(bindingAdapterPosition, isChecked)
                 }
             }
         }

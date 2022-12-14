@@ -17,9 +17,12 @@ import java.util.stream.Collectors
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
     protected var selectableMode: EasyAdapterSelectableModes
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), DefaultLifecycleObserver {
-    abstract val payloadClass: Class<SelectableItem<ItemType>>
-    protected var items: MutableList<SelectableItem<ItemType>> = mutableListOf()
-    protected var selectedPositions: MutableList<Int> = mutableListOf()
+    private var recyclerView: RecyclerView? = null
+    private var wrapperAdapter: HeaderViewRecyclerAdapter? = null
+    private var items: MutableList<SelectableItem<ItemType>> = mutableListOf()
+    private var itemsSelection: MutableList<Int> = mutableListOf()
+    private val onSelectionChangedListeners: MutableList<EasyAdapterSelectionChangedListener> = mutableListOf()
+    private val onCollectionChangedListeners: MutableList<EasyAdapterCollectionChangedListener> = mutableListOf()
     protected var itemsComparator: EasyAdapterItemsComparator<ItemType>? = null
     protected var lifecycleOwner: LifecycleOwner? = null
         set(value) {
@@ -27,44 +30,67 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
             if (value != null)
                 lifecycleOwner!!.lifecycle.addObserver(this)
         }
-    private var recyclerView: RecyclerView? = null
-    private val onSelectionChangedListeners: MutableList<EasyAdapterSelectionChangedListener> = mutableListOf()
-    private val onCollectionChangedListeners: MutableList<EasyAdapterCollectionChangedListener> = mutableListOf()
-    private var wrapperAdapter: HeaderViewRecyclerAdapter? = null
     val headersCount: Int
         get() = if (wrapperAdapter == null) 0 else wrapperAdapter!!.headersCount
     val footersCount: Int
         get() = if (wrapperAdapter == null) 0 else wrapperAdapter!!.footersCount
     val selectedItems: List<ItemType>
         get() {
-            val selected: MutableList<ItemType> = mutableListOf()
-            for (selectedPosition in selectedPositions) selected.add(items[selectedPosition].item)
-            return selected
+            return mutableListOf<ItemType>().apply {
+                for (selectedPosition in itemsSelection)
+                    add(items[selectedPosition].item)
+            }
         }
+    val selectedPositionsAsList: List<Int>
+        get() = itemsSelection.toList()
     val selectedPositionsAsArray: IntArray
         get() {
-            if (selectedPositions.isEmpty()) return IntArray(0)
-            val selection = IntArray(selectedPositions.size)
-            for (i in selectedPositions.indices)
-                selection[i] = selectedPositions[i]
-            return selection
+            return IntArray(if (itemsSelection.isEmpty()) 0 else itemsSelection.size).apply {
+                for (i in itemsSelection.indices)
+                    this[i] = itemsSelection[i]
+            }
         }
     val selectionString: String
         get() {
-            var selectionString = ""
-            val selection = selectedItems
-            for (i in selection.indices) {
-                selectionString += getItemName(selection[i])
-                if (i < selection.size - 1)
-                    selectionString = "$selectionString, "
+            var string = ""
+            for (i in selectedItems.indices) {
+                string += getItemName(selectedItems[i])
+                if (i < selectedItems.size - 1)
+                    string = "$string, "
             }
-            return selectionString
+            return string
         }
+    abstract val payloadClass: Class<SelectableItem<ItemType>>
+
+    @Override
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        this.recyclerView = recyclerView
+    }
+
+    @Override
+    override fun onDestroy(owner: LifecycleOwner) {
+        clearObservableCallbacksOnCollection()
+    }
+
+    @Override
+    override fun getItemCount(): Int {
+        return items.size
+    }
+
+    @Override
+    open fun getItemName(item: ItemType): String? {
+        return item.itemName
+    }
+
+    fun getItems(): List<ItemType> {
+        return items.map { return@map it.item }.toList()
+    }
 
     fun saveAdapterState(): Bundle {
         val savedState = Bundle()
         savedState.putParcelableArrayList("ADAPTER_ITEMS", ArrayList(items))
-        savedState.putIntegerArrayList("ADAPTER_SELECTION", ArrayList(selectedPositions))
+        savedState.putIntegerArrayList("ADAPTER_SELECTION", ArrayList(itemsSelection))
         savedState.putInt("ADAPTER_SELECTION_MODE", selectableMode.value)
         return savedState
     }
@@ -73,26 +99,9 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
     fun restoreAdapterState(savedState: Bundle) {
         items = BundleUtils.getParcelableArrayList("ADAPTER_ITEMS", savedState, payloadClass)!!
             .toMutableList()
-        selectedPositions = savedState.getIntegerArrayList("ADAPTER_SELECTION")!!
+        itemsSelection = savedState.getIntegerArrayList("ADAPTER_SELECTION")!!
         selectableMode = EasyAdapterSelectableModes.valueOf(savedState.getInt("ADAPTER_SELECTION_MODE"))
         notifyDataSetChanged()
-    }
-
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        this.recyclerView = recyclerView
-    }
-
-    override fun onDestroy(owner: LifecycleOwner) {
-        clearObservableCallbacksOnCollection()
-    }
-
-    override fun getItemCount(): Int {
-        return items.size
-    }
-
-    open fun getItemName(item: ItemType): String? {
-        return item.itemName
     }
 
     fun addOnSelectionChangedListener(onSelectionChangedListener: EasyAdapterSelectionChangedListener) {
@@ -397,7 +406,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
     }
 
     fun hasSelection(): Boolean {
-        return selectedPositions.size > 0
+        return itemsSelection.size > 0
     }
 
     fun positionExists(position: Int): Boolean {
@@ -487,8 +496,8 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
 
 
     fun isItemSelected(targetPosition: Int): Boolean {
-        if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE || selectedPositions.size <= 0) return false
-        for (checkedPosition in selectedPositions) {
+        if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE || itemsSelection.size <= 0) return false
+        for (checkedPosition in itemsSelection) {
             if (checkedPosition == targetPosition) return true
         }
         return false
@@ -500,16 +509,16 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
     }
 
     private fun clearSelectionInternally(notifyForSelectionChange: Boolean): List<Int> {
-        if (!hasSelection()) return selectedPositions
-        for (posToUnselect in selectedPositions)
+        if (!hasSelection()) return itemsSelection
+        for (posToUnselect in itemsSelection)
             if (positionExists(posToUnselect))
                 items[posToUnselect].isSelected = false
-        if (notifyForSelectionChange) for (position in selectedPositions) notifyItemChanged(
+        if (notifyForSelectionChange) for (position in itemsSelection) notifyItemChanged(
             position + headersCount,
             false
         )
-        val affectedPositions: List<Int> = selectedPositions.toList()
-        selectedPositions.clear()
+        val affectedPositions: List<Int> = itemsSelection.toList()
+        itemsSelection.clear()
         return affectedPositions
     }
 
@@ -522,12 +531,12 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
         val selectedState = isItemSelected(position)
         if (selectedState == newState) return
         if (newState) {
-            if (selectedPositions.contains(position)) return
-            selectedPositions.add(position)
+            if (itemsSelection.contains(position)) return
+            itemsSelection.add(position)
         } else {
-            val positionToRemove = selectedPositions.indexOf(position)
+            val positionToRemove = itemsSelection.indexOf(position)
             if (positionToRemove == -1) return
-            selectedPositions.removeAt(positionToRemove)
+            itemsSelection.removeAt(positionToRemove)
         }
         items[position].isSelected = newState
         if (notifyForSelectionChange) notifyItemChanged(position + headersCount, false)

@@ -5,6 +5,7 @@ import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.databinding.PropertyChangeRegistry
 
+@Suppress("unused")
 abstract class EasyAdapterObservableDataModel() : EasyAdapterDataModel(), Observable {
     val callbacks = PropertyChangeRegistry()
 

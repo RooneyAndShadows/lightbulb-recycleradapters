@@ -39,7 +39,7 @@ abstract class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
     }
 
     override fun getItemCount(): Int {
-        return items.size
+        return getItems().size
     }
 
     override fun getItemName(item: ItemType): String? {
