@@ -11,7 +11,7 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRe
 import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
-abstract class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>(SELECT_MULTIPLE) {
+class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>(SELECT_MULTIPLE) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val v = LayoutInflater.from(parent.context)
             .inflate(R.layout.layout_checkbox_button, parent, false) as CheckBoxView

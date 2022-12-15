@@ -11,7 +11,7 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRe
 import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
-abstract class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
+class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
     EasyRecyclerAdapter<ItemType>(EasyAdapterSelectableModes.SELECT_SINGLE) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val v = LayoutInflater.from(parent.context)
@@ -42,7 +42,7 @@ abstract class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
         return getItems().size
     }
 
-    override fun getItemName(item: ItemType): String? {
+    override fun getItemName(item: ItemType): String {
         return item.itemName
     }
 

@@ -13,7 +13,8 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.Hea
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
-@Suppress("MemberVisibilityCanBePrivate", "unused")
+
+@Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
     protected var selectableMode: EasyAdapterSelectableModes
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), DefaultLifecycleObserver {
@@ -60,7 +61,6 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
             }
             return string
         }
-    abstract val payloadClass: Class<SelectableItem<ItemType>>
 
     @Override
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -97,7 +97,8 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
 
     @SuppressLint("NotifyDataSetChanged")
     fun restoreAdapterState(savedState: Bundle) {
-        items = BundleUtils.getParcelableArrayList("ADAPTER_ITEMS", savedState, payloadClass)!!
+        val clz = Class.forName(SelectableItem::class.java.name) as Class<SelectableItem<ItemType>>
+        items = BundleUtils.getParcelableArrayList("ADAPTER_ITEMS", savedState, clz)!!
             .toMutableList()
         itemsSelection = savedState.getIntegerArrayList("ADAPTER_SELECTION")!!
         selectableMode = EasyAdapterSelectableModes.valueOf(savedState.getInt("ADAPTER_SELECTION_MODE"))
