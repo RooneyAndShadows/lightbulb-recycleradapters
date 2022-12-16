@@ -15,8 +15,8 @@ import java.util.stream.Collectors
 
 
 @Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
-abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>(
-    protected var selectableMode: EasyAdapterSelectableModes
+abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
+    protected var selectableMode: EasyAdapterSelectableModes = EasyAdapterSelectableModes.SELECT_NONE
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), DefaultLifecycleObserver {
     private var recyclerView: RecyclerView? = null
     private var wrapperAdapter: HeaderViewRecyclerAdapter? = null

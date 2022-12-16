@@ -1,6 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction
 
-import android.os.Parcel
 import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.databinding.PropertyChangeRegistry
@@ -8,8 +7,6 @@ import androidx.databinding.PropertyChangeRegistry
 @Suppress("unused")
 abstract class EasyAdapterObservableDataModel() : EasyAdapterDataModel(), Observable {
     val callbacks = PropertyChangeRegistry()
-
-    protected constructor(parcel: Parcel) : this()
 
     override fun addOnPropertyChangedCallback(
         callback: OnPropertyChangedCallback
