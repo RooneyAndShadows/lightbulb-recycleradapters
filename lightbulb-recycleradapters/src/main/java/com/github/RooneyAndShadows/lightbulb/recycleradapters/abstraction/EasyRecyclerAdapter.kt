@@ -16,7 +16,7 @@ import java.util.stream.Collectors
 
 @Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
-    protected var selectableMode: EasyAdapterSelectableModes = EasyAdapterSelectableModes.SELECT_NONE
+    selectableMode: EasyAdapterSelectableModes = EasyAdapterSelectableModes.SELECT_NONE
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), DefaultLifecycleObserver {
     private var recyclerView: RecyclerView? = null
     private var wrapperAdapter: HeaderViewRecyclerAdapter? = null
@@ -24,6 +24,8 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     private var itemsSelection: MutableList<Int> = mutableListOf()
     private val onSelectionChangedListeners: MutableList<EasyAdapterSelectionChangedListener> = mutableListOf()
     private val onCollectionChangedListeners: MutableList<EasyAdapterCollectionChangedListener> = mutableListOf()
+    protected var selectableMode: EasyAdapterSelectableModes = selectableMode
+        private set
     protected var itemsComparator: EasyAdapterItemsComparator<ItemType>? = null
     protected var lifecycleOwner: LifecycleOwner? = null
         set(value) {
@@ -139,7 +141,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun setCollection(collection: List<ItemType>) {
+    open fun setCollection(collection: List<ItemType>) {
         val selectableCollection = wrapToSelectable(collection)
         val selectionChanged: Boolean
         if (itemsComparator == null || hasStableIds()) {
@@ -172,7 +174,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      *
      * @param collection - items to be added.
      */
-    fun appendCollection(collection: List<ItemType>?) {
+    open fun appendCollection(collection: List<ItemType>?) {
         if (collection == null || collection.isEmpty()) return
         val selectableCollection = wrapToSelectable(collection)
         val needToUpdatePreviousLastItem = items.size > 0 && recyclerView!!.itemDecorationCount > 0
@@ -193,7 +195,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      *
      * @param item - item to be added.
      */
-    fun addItem(item: ItemType?) {
+    open fun addItem(item: ItemType?) {
         if (item == null) return
         val needToUpdatePreviousLastItem =
             items.size > 0 && recyclerView!!.itemDecorationCount > 0
@@ -210,7 +212,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     /**
      * Used to remove all items in the adapter.
      */
-    fun clearCollection() {
+    open fun clearCollection() {
         if (!hasItems()) return
         val selectionChanged = hasSelection()
         clearSelectionInternally(false)
@@ -229,7 +231,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      * @param fromPosition - from which position to move.
      * @param toPosition   - new position.
      */
-    fun moveItem(fromPosition: Int, toPosition: Int) {
+    open fun moveItem(fromPosition: Int, toPosition: Int) {
         if (!positionExists(fromPosition) || !positionExists(toPosition)) return
         val movingItem = getSelectableItem(fromPosition)!!
         items.removeAt(fromPosition)
@@ -242,7 +244,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      *
      * @param targetPosition - position to be removed.
      */
-    fun removeItem(targetPosition: Int) {
+    open fun removeItem(targetPosition: Int) {
         if (!positionExists(targetPosition)) return
         clearObservableCallbacks(targetPosition)
         val selectionChanged = isItemSelected(targetPosition)
@@ -258,7 +260,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      *
      * @param collection - items to be removed.
      */
-    fun removeItems(collection: List<ItemType>?) {
+    open fun removeItems(collection: List<ItemType>?) {
         val positionsToRemove = getPositions(collection)
         if (positionsToRemove.isEmpty()) return
         var selectionChanged = false
@@ -282,7 +284,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     /**
      * Used to clear deselect all elements in adapter.
      */
-    fun clearSelection() {
+    open fun clearSelection() {
         if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE || !hasSelection()) return
         if (clearSelectionInternally(true).isNotEmpty()) dispatchSelectionChangedEvent()
     }
@@ -292,7 +294,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      *
      * @param newState - true -> select | false -> unselect.
      */
-    fun selectAll(newState: Boolean) {
+    open fun selectAll(newState: Boolean) {
         if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE) return
         var changed = false
         for (positionToSelect in items.indices) {
@@ -311,7 +313,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      * @param newState     - true -> select | false -> unselect.
      * @param notifyChange - whether to notify registered observers in case of change.
      */
-    fun selectItem(targetItem: ItemType, newState: Boolean, notifyChange: Boolean) {
+    open fun selectItem(targetItem: ItemType, newState: Boolean, notifyChange: Boolean) {
         val index = getPosition(targetItem)
         if (index == -1) return
         selectItemAt(index, newState, notifyChange)
@@ -325,7 +327,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      * @param notifyChange   - whether to notify registered observers in case of change.
      */
     @JvmOverloads
-    fun selectItemAt(targetPosition: Int, newState: Boolean, notifyChange: Boolean = true) {
+    open fun selectItemAt(targetPosition: Int, newState: Boolean, notifyChange: Boolean = true) {
         if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE || !positionExists(targetPosition) || newState == isItemSelected(
                 targetPosition
             )
@@ -344,7 +346,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      * @param targetItem - item to be un/selected
      * @param newState   - true -> select | false -> unselect.
      */
-    fun selectItem(targetItem: ItemType, newState: Boolean) {
+    open fun selectItem(targetItem: ItemType, newState: Boolean) {
         val index = getPosition(targetItem)
         if (index == -1) return
         selectItemAt(index, newState, true)
@@ -358,7 +360,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      * @param incremental - Indicates whether the selection is applied incremental or initial.
      * Important: Parameter is taken in account only when using multiple selection [EasyAdapterSelectableModes].
      */
-    fun selectPositions(positions: IntArray?, newState: Boolean, incremental: Boolean) {
+    open fun selectPositions(positions: IntArray?, newState: Boolean, incremental: Boolean) {
         if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE) return
         if (positions == null || positions.isEmpty()) {
             if (!hasSelection()) return
@@ -495,7 +497,6 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
         return valuesString
     }
 
-
     fun isItemSelected(targetPosition: Int): Boolean {
         if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE || itemsSelection.size <= 0) return false
         for (checkedPosition in itemsSelection) {
@@ -556,9 +557,8 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     }
 
     private fun dispatchSelectionChangedEvent() {
-        for (onSelectionChangedListener in onSelectionChangedListeners) onSelectionChangedListener.onChanged(
-            selectedPositionsAsArray
-        )
+        for (onSelectionChangedListener in onSelectionChangedListeners)
+            onSelectionChangedListener.onChanged(selectedPositionsAsArray)
     }
 
     private fun dispatchCollectionChangedEvent() {
