@@ -174,8 +174,8 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      *
      * @param collection - items to be added.
      */
-    open fun appendCollection(collection: List<ItemType>?) {
-        if (collection == null || collection.isEmpty()) return
+    open fun appendCollection(collection: List<ItemType>) {
+        if (collection.isEmpty()) return
         val selectableCollection = wrapToSelectable(collection)
         val needToUpdatePreviousLastItem = items.size > 0 && recyclerView!!.itemDecorationCount > 0
         val previousLastItem = items.size + headersCount - 1
@@ -195,8 +195,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      *
      * @param item - item to be added.
      */
-    open fun addItem(item: ItemType?) {
-        if (item == null) return
+    open fun addItem(item: ItemType) {
         val needToUpdatePreviousLastItem =
             items.size > 0 && recyclerView!!.itemDecorationCount > 0
         val previousLastPosition = items.size + headersCount - 1
