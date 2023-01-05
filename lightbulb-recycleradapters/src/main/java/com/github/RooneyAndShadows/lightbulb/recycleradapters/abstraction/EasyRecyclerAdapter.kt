@@ -13,10 +13,10 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.Hea
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
-
+//TODO fix to use ConcatAdapter instead of wrapping with HeaderViewRecyclerAdapter https://medium.com/androiddevelopers/merge-adapters-sequentially-with-mergeadapter-294d2942127a
 @Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
-    selectableMode: EasyAdapterSelectableModes = EasyAdapterSelectableModes.SELECT_NONE
+    selectableMode: EasyAdapterSelectableModes = EasyAdapterSelectableModes.SELECT_NONE,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), DefaultLifecycleObserver {
     private var recyclerView: RecyclerView? = null
     private var wrapperAdapter: HeaderViewRecyclerAdapter? = null
@@ -64,6 +64,24 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
             return string
         }
 
+    /**
+     * Used to add values to out state of the adapter during save state.
+     *
+     * @param outState state to save
+     * @return Returns a Parcelable object containing the adapter's current dynamic state.
+     */
+    open fun onSaveInstanceState(outState: Bundle): Bundle {
+        return outState
+    }
+
+    /**
+     * Used to reuse values saved during previous save state.
+     *
+     * @param savedState The state that had previously been returned by onSaveInstanceState
+     */
+    open fun onRestoreInstanceState(savedState: Bundle) {
+    }
+
     @Override
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -94,6 +112,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
         savedState.putParcelableArrayList("ADAPTER_ITEMS", ArrayList(items))
         savedState.putIntegerArrayList("ADAPTER_SELECTION", ArrayList(itemsSelection))
         savedState.putInt("ADAPTER_SELECTION_MODE", selectableMode.value)
+        onSaveInstanceState(savedState)
         return savedState
     }
 
@@ -105,6 +124,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
         itemsSelection = savedState.getIntegerArrayList("ADAPTER_SELECTION")!!
         selectableMode = EasyAdapterSelectableModes.valueOf(savedState.getInt("ADAPTER_SELECTION_MODE"))
         notifyDataSetChanged()
+        onRestoreInstanceState(savedState)
     }
 
     fun addOnSelectionChangedListener(onSelectionChangedListener: EasyAdapterSelectionChangedListener) {
@@ -526,7 +546,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     private fun selectInternally(
         position: Int,
         newState: Boolean,
-        notifyForSelectionChange: Boolean
+        notifyForSelectionChange: Boolean,
     ) {
         if (!positionExists(position)) return
         val selectedState = isItemSelected(position)
