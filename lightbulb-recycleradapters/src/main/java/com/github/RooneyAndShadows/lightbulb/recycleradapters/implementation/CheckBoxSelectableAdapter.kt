@@ -11,11 +11,11 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRe
 import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
-class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>(SELECT_MULTIPLE) {
+open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>(SELECT_MULTIPLE) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val v = LayoutInflater.from(parent.context)
             .inflate(R.layout.layout_checkbox_button, parent, false) as CheckBoxView
-        val padding = itemPadding
+        val padding = getItemPadding()
         if (padding != null && padding.size == 4) v.setPadding(
             padding[0],
             padding[1],
@@ -45,25 +45,21 @@ class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerA
         return item.itemName
     }
 
-    protected fun getItemIcon(item: ItemType): Drawable? {
+    protected open fun getItemIcon(item: ItemType): Drawable? {
         return null
     }
 
-    protected fun getItemIconBackground(item: ItemType): Drawable? {
+    protected open fun getItemIconBackground(item: ItemType): Drawable? {
         return null
     }
 
-    /**
-     * Defines padding for the item view.
-     *
-     * @return int[] {left,top,right,bottom}
-     */
-    protected val itemPadding: IntArray?
-        get() = null
+    protected open fun getItemPadding(): IntArray? {
+        return null
+    }
 
     inner class CheckBoxViewHolder internal constructor(
         categoryItemBinding: CheckBoxView?,
-        adapter: EasyRecyclerAdapter<ItemType>
+        adapter: EasyRecyclerAdapter<ItemType>,
     ) : RecyclerView.ViewHolder(
         categoryItemBinding!!
     ) {

@@ -11,12 +11,12 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRe
 import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
-class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
+open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
     EasyRecyclerAdapter<ItemType>(EasyAdapterSelectableModes.SELECT_SINGLE) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val v = LayoutInflater.from(parent.context)
             .inflate(R.layout.layout_radio_button, parent, false) as RadioButtonView
-        val padding = itemPadding
+        val padding = getItemPadding()
         if (padding != null && padding.size == 4) v.setPadding(
             padding[0],
             padding[1],
@@ -46,21 +46,17 @@ class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
         return item.itemName
     }
 
-    protected fun getItemIcon(item: ItemType): Drawable? {
+    protected open fun getItemIcon(item: ItemType): Drawable? {
         return null
     }
 
-    protected fun getItemIconBackground(item: ItemType): Drawable? {
+    protected open fun getItemIconBackground(item: ItemType): Drawable? {
         return null
     }
 
-    /**
-     * Defines padding for the item view.
-     *
-     * @return int[] {left,top,right,bottom}
-     */
-    protected val itemPadding: IntArray?
-        get() = null
+    protected open fun getItemPadding(): IntArray? {
+        return null
+    }
 
     inner class RadioButtonViewHolder(categoryItemBinding: RadioButtonView?) :
         RecyclerView.ViewHolder(
