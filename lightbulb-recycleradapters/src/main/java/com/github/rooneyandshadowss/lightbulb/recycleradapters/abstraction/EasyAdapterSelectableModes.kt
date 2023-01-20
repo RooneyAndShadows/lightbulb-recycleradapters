@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction
+package com.github.rooneyandshadowss.lightbulb.recycleradapters.abstraction
 
 enum class EasyAdapterSelectableModes(val value: Int) {
     SELECT_NONE(1),

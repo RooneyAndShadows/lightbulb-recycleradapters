@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction
+package com.github.rooneyandshadowss.lightbulb.recycleradapters.abstraction
 
 abstract class EasyAdapterItemsComparator<T : EasyAdapterDataModel?> {
     abstract fun compareItems(oldItem: T, newItem: T): Boolean
