@@ -1,4 +1,4 @@
-package com.github.rooneyandshadowss.lightbulb.recycleradapters.abstraction.callbacks
+package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.callbacks
 
 interface EasyAdapterSelectionChangedListener {
     fun onChanged(newSelection: IntArray?)

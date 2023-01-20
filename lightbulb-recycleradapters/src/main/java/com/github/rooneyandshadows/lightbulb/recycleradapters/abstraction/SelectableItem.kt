@@ -1,4 +1,4 @@
-package com.github.rooneyandshadowss.lightbulb.recycleradapters.abstraction
+package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction
 
 import android.os.Parcel
 import android.os.Parcelable

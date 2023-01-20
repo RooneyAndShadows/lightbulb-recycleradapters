@@ -1,4 +1,4 @@
-package com.github.rooneyandshadowss.lightbulb.recycleradapters.abstraction
+package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -7,9 +7,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.github.rooneyandshadows.lightbulb.commons.utils.BundleUtils
-import com.github.rooneyandshadowss.lightbulb.recycleradapters.abstraction.callbacks.EasyAdapterCollectionChangedListener
-import com.github.rooneyandshadowss.lightbulb.recycleradapters.abstraction.callbacks.EasyAdapterSelectionChangedListener
-import com.github.rooneyandshadowss.lightbulb.recycleradapters.implementation.HeaderViewRecyclerAdapter
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.callbacks.EasyAdapterCollectionChangedListener
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.callbacks.EasyAdapterSelectionChangedListener
+import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.HeaderViewRecyclerAdapter
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
