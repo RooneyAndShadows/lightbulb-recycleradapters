@@ -8,7 +8,7 @@ buildscript {
                 ktx                 : [
                         core: "1.9.0"
                 ],
-                android_appcompat   : "1.5.1",
+                android_appcompat   : "1.6.0",
                 android_recyclerview: "1.2.1",
                 lightbulb           : [
                         commons       : "1.0.18",
