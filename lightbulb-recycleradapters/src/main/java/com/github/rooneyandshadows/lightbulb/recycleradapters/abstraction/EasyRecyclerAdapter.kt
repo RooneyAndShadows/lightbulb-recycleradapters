@@ -485,7 +485,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
         val matchedPositions: MutableList<Int> = mutableListOf()
         for (i in items.indices)
             for (target in targets)
-                if (items[i] == target)
+                if (items[i].item == target)
                     matchedPositions.add(i)
         val positions = IntArray(matchedPositions.size)
         for (i in matchedPositions.indices) positions[i] = matchedPositions[i]
@@ -497,7 +497,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
         val matchedPositions: MutableList<Int> = mutableListOf()
         for (i in items.indices)
             for (target in targets)
-                if (items[i] == target)
+                if (items[i].item == target)
                     matchedPositions.add(i)
         val positions = IntArray(matchedPositions.size)
         for (i in matchedPositions.indices) positions[i] = matchedPositions[i]
