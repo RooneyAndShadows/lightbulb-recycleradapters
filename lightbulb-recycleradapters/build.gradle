@@ -61,7 +61,7 @@ dependencies {
     implementation "com.github.rooneyandshadows:lightbulb-commons:$versions.lightbulb.commons"
     implementation "com.github.rooneyandshadows:lightbulb-selectableview:$versions.lightbulb.selectableview"
     implementation "androidx.core:core-ktx:$versions.ktx.core"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$versions.kotlin"
 }
 
 repositories {
