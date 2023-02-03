@@ -15,6 +15,7 @@ import java.util.stream.Collectors
 
 //TODO fix to use ConcatAdapter instead of wrapping with HeaderViewRecyclerAdapter https://medium.com/androiddevelopers/merge-adapters-sequentially-with-mergeadapter-294d2942127a
 @Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
+@JvmSuppressWildcards
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
     selectableMode: EasyAdapterSelectableModes = EasyAdapterSelectableModes.SELECT_NONE,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), DefaultLifecycleObserver {
