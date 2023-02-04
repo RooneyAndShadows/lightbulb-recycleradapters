@@ -6,7 +6,9 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.*
 import com.github.rooneyandshadows.lightbulb.commons.utils.BundleUtils
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.callbacks.EasyAdapterCollectionChangedListener
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.callbacks.EasyAdapterSelectionChangedListener
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.HeaderViewRecyclerAdapter
@@ -17,8 +19,8 @@ import java.util.stream.Collectors
 @Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
 @JvmSuppressWildcards
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
-    selectableMode: EasyAdapterSelectableModes = EasyAdapterSelectableModes.SELECT_NONE,
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), DefaultLifecycleObserver {
+    selectableMode: EasyAdapterSelectableModes = SELECT_NONE,
+) : Adapter<ViewHolder>(), DefaultLifecycleObserver {
     private var recyclerView: RecyclerView? = null
     private var wrapperAdapter: HeaderViewRecyclerAdapter? = null
     private var items: MutableList<SelectableItem<ItemType>> = mutableListOf()
@@ -305,7 +307,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      * Used to clear deselect all elements in adapter.
      */
     open fun clearSelection() {
-        if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE || !hasSelection()) return
+        if (selectableMode == SELECT_NONE || !hasSelection()) return
         if (clearSelectionInternally(true).isNotEmpty()) dispatchSelectionChangedEvent()
     }
 
@@ -315,7 +317,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      * @param newState - true -> select | false -> unselect.
      */
     open fun selectAll(newState: Boolean) {
-        if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE) return
+        if (selectableMode == SELECT_NONE) return
         var changed = false
         for (positionToSelect in items.indices) {
             val isItemSelected = isItemSelected(positionToSelect)
@@ -348,11 +350,11 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      */
     @JvmOverloads
     open fun selectItemAt(targetPosition: Int, newState: Boolean, notifyChange: Boolean = true) {
-        if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE || !positionExists(targetPosition) || newState == isItemSelected(
+        if (selectableMode == SELECT_NONE || !positionExists(targetPosition) || newState == isItemSelected(
                 targetPosition
             )
         ) return
-        if (selectableMode == EasyAdapterSelectableModes.SELECT_SINGLE) clearSelectionInternally(
+        if (selectableMode == SELECT_SINGLE) clearSelectionInternally(
             true
         )
         selectInternally(targetPosition, newState, notifyChange)
@@ -381,20 +383,20 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
      * Important: Parameter is taken in account only when using multiple selection [EasyAdapterSelectableModes].
      */
     open fun selectPositions(positions: IntArray?, newState: Boolean, incremental: Boolean) {
-        if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE) return
+        if (selectableMode == SELECT_NONE) return
         if (positions == null || positions.isEmpty()) {
             if (!hasSelection()) return
             if (clearSelectionInternally(true).isNotEmpty()) dispatchSelectionChangedEvent()
             return
         }
-        if (selectableMode == EasyAdapterSelectableModes.SELECT_SINGLE) {
+        if (selectableMode == SELECT_SINGLE) {
             val targetPosition = positions[0]
             if (!positionExists(targetPosition) || newState == isItemSelected(targetPosition)) return
             clearSelectionInternally(true)
             selectInternally(targetPosition, newState, true)
             dispatchSelectionChangedEvent()
         }
-        if (selectableMode == EasyAdapterSelectableModes.SELECT_MULTIPLE) {
+        if (selectableMode == SELECT_MULTIPLE) {
             var selectionChanged = false
             if (incremental) {
                 for (targetPosition in positions) {
@@ -518,7 +520,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     }
 
     fun isItemSelected(targetPosition: Int): Boolean {
-        if (selectableMode == EasyAdapterSelectableModes.SELECT_NONE || itemsSelection.size <= 0) return false
+        if (selectableMode == SELECT_NONE || itemsSelection.size <= 0) return false
         for (checkedPosition in itemsSelection) {
             if (checkedPosition == targetPosition) return true
         }

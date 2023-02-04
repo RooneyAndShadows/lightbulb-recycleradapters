@@ -4,7 +4,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.github.rooneyandshadows.lightbulb.commons.utils.ParcelUtils
 
-class SelectableItem<ItemType : EasyAdapterDataModel> : Parcelable {
+internal class SelectableItem<ItemType : EasyAdapterDataModel> : Parcelable {
     var isSelected: Boolean
     var item: ItemType
 

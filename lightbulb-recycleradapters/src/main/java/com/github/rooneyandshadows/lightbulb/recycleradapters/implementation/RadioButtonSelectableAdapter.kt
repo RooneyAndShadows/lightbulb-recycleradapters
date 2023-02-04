@@ -12,6 +12,7 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRe
 import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
+@JvmSuppressWildcards
 open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
     EasyRecyclerAdapter<ItemType>(EasyAdapterSelectableModes.SELECT_SINGLE) {
     @Override
