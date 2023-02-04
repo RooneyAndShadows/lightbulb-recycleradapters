@@ -27,8 +27,6 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     private var itemsSelection: MutableList<Int> = mutableListOf()
     private val onSelectionChangedListeners: MutableList<EasyAdapterSelectionChangedListener> = mutableListOf()
     private val onCollectionChangedListeners: MutableList<EasyAdapterCollectionChangedListener> = mutableListOf()
-    protected var selectableMode: EasyAdapterSelectableModes = selectableMode
-        private set
     protected var itemsComparator: EasyAdapterItemsComparator<ItemType>? = null
     protected var lifecycleOwner: LifecycleOwner? = null
         set(value) {
@@ -36,6 +34,8 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
             if (value != null)
                 lifecycleOwner!!.lifecycle.addObserver(this)
         }
+    var selectableMode: EasyAdapterSelectableModes = selectableMode
+        private set
     val headersCount: Int
         get() = if (wrapperAdapter == null) 0 else wrapperAdapter!!.headersCount
     val footersCount: Int
