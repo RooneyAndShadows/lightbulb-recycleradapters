@@ -6,6 +6,7 @@ enum class EasyAdapterSelectableModes(val value: Int) {
     SELECT_MULTIPLE(3);
 
     companion object {
+        @JvmStatic
         fun valueOf(value: Int) = values().first { it.value == value }
     }
 }
