@@ -2,6 +2,8 @@ package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.widget.Filter
+import android.widget.Filterable
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
@@ -20,13 +22,15 @@ import java.util.stream.Collectors
 @JvmSuppressWildcards
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
     selectableMode: EasyAdapterSelectableModes = SELECT_NONE,
-) : Adapter<ViewHolder>(), DefaultLifecycleObserver {
+) : Adapter<ViewHolder>(), DefaultLifecycleObserver, Filterable {
     private var recyclerView: RecyclerView? = null
     private var wrapperAdapter: HeaderViewRecyclerAdapter? = null
     private var items: MutableList<SelectableItem<ItemType>> = mutableListOf()
     private var itemsSelection: MutableList<Int> = mutableListOf()
+    private var filteredPositions: MutableList<Int> = mutableListOf()
     private val onSelectionChangedListeners: MutableList<EasyAdapterSelectionChangedListener> = mutableListOf()
     private val onCollectionChangedListeners: MutableList<EasyAdapterCollectionChangedListener> = mutableListOf()
+    private var currentFilterQuery: String = ""
     protected var itemsComparator: EasyAdapterItemsComparator<ItemType>? = null
     protected var lifecycleOwner: LifecycleOwner? = null
         set(value) {
@@ -98,7 +102,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
 
     @Override
     override fun getItemCount(): Int {
-        return items.size
+        return getFilteredItems().size
     }
 
     @Override
@@ -108,6 +112,13 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
 
     fun getItems(): List<ItemType> {
         return items.map { return@map it.item }.toList()
+    }
+
+    fun getFilteredItems(): List<ItemType> {
+        return mutableListOf<ItemType>().apply {
+            for (filteredPosition in filteredPositions)
+                add(items[filteredPosition].item)
+        }
     }
 
     fun saveAdapterState(): Bundle {
@@ -275,6 +286,39 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
         notifyItemRemoved(targetPosition + headersCount)
         if (selectionChanged) dispatchSelectionChangedEvent()
         dispatchCollectionChangedEvent()
+    }
+
+    protected open fun filterItem(item: ItemType, filterQuery: String): Boolean {
+        return true
+    }
+
+    @Override
+    final override fun getFilter(): Filter {
+        return object : Filter() {
+            @Override
+            override fun performFiltering(charSequence: CharSequence): FilterResults {
+                currentFilterQuery = charSequence.toString()
+                filteredPositions.clear()
+                if (currentFilterQuery.isBlank()) {
+                    for (position in 0 until items.size) {
+                        filteredPositions.add(position)
+                    }
+                } else {
+                    items.forEachIndexed { index, selectableItem ->
+                        if (filterItem(selectableItem.item, currentFilterQuery))
+                            filteredPositions.add(index)
+                    }
+                }
+                val filterResults = FilterResults()
+                //filterResults.values = result
+                return filterResults
+            }
+
+            @SuppressLint("NotifyDataSetChanged")
+            override fun publishResults(charSequence: CharSequence, filterResults: FilterResults) {
+                notifyDataSetChanged()
+            }
+        }
     }
 
     /**
@@ -585,5 +629,6 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
 
     private fun dispatchCollectionChangedEvent() {
         for (listener in onCollectionChangedListeners) listener.onChanged()
+        filter.filter(currentFilterQuery)
     }
 }
