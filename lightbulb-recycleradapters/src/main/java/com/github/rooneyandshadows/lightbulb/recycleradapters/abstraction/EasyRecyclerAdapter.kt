@@ -89,6 +89,14 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     open fun onRestoreInstanceState(savedState: Bundle) {
     }
 
+    companion object {
+        private const val ADAPTER_FILTER_QUERY = "ADAPTER_FILTER_QUERY"
+        private const val ADAPTER_ITEMS = "ADAPTER_ITEMS"
+        private const val ADAPTER_SELECTION = "ADAPTER_SELECTION"
+        private const val ADAPTER_FILTERED_POSITIONS = "ADAPTER_FILTERED_POSITIONS"
+        private const val ADAPTER_SELECTION_MODE = "ADAPTER_SELECTION_MODE"
+    }
+
     @Override
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -121,24 +129,33 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
         }
     }
 
+
     fun saveAdapterState(): Bundle {
-        val savedState = Bundle()
-        savedState.putParcelableArrayList("ADAPTER_ITEMS", ArrayList(items))
-        savedState.putIntegerArrayList("ADAPTER_SELECTION", ArrayList(itemsSelection))
-        savedState.putInt("ADAPTER_SELECTION_MODE", selectableMode.value)
-        onSaveInstanceState(savedState)
-        return savedState
+        return Bundle().apply {
+            putString(ADAPTER_FILTER_QUERY, currentFilterQuery)
+            putParcelableArrayList(ADAPTER_ITEMS, ArrayList(items))
+            putIntegerArrayList(ADAPTER_SELECTION, ArrayList(itemsSelection))
+            putIntegerArrayList(ADAPTER_FILTERED_POSITIONS, ArrayList(filteredPositions))
+            putInt(ADAPTER_SELECTION_MODE, selectableMode.value)
+            onSaveInstanceState(this)
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun restoreAdapterState(savedState: Bundle) {
-        val clz = Class.forName(SelectableItem::class.java.name) as Class<SelectableItem<ItemType>>
-        items = BundleUtils.getParcelableArrayList("ADAPTER_ITEMS", savedState, clz)!!
-            .toMutableList()
-        itemsSelection = savedState.getIntegerArrayList("ADAPTER_SELECTION")!!
-        selectableMode = EasyAdapterSelectableModes.valueOf(savedState.getInt("ADAPTER_SELECTION_MODE"))
-        notifyDataSetChanged()
-        onRestoreInstanceState(savedState)
+        savedState.apply {
+            val clz = Class.forName(SelectableItem::class.java.name) as Class<SelectableItem<ItemType>>
+            items = BundleUtils.getParcelableArrayList(
+                ADAPTER_ITEMS,
+                savedState, clz
+            )!!.toMutableList()
+            currentFilterQuery = getString(ADAPTER_FILTER_QUERY) ?: ""
+            itemsSelection = savedState.getIntegerArrayList(ADAPTER_SELECTION)!!
+            filteredPositions = savedState.getIntegerArrayList(ADAPTER_FILTERED_POSITIONS)!!
+            selectableMode = EasyAdapterSelectableModes.valueOf(savedState.getInt(ADAPTER_SELECTION_MODE))
+            notifyDataSetChanged()
+            onRestoreInstanceState(savedState)
+        }
     }
 
     fun addOnSelectionChangedListener(onSelectionChangedListener: EasyAdapterSelectionChangedListener) {
