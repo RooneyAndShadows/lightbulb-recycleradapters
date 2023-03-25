@@ -595,7 +595,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     }
 
     private fun dispatchCollectionChangedEvent() {
-        onCollectionChanged()
         for (listener in onCollectionChangedListeners) listener.onChanged()
+        onCollectionChanged()
     }
 }
