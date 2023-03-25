@@ -99,7 +99,7 @@ abstract class EasyRecyclerFilterableAdapter<ItemType : EasyAdapterDataModel> @J
                         return true
                     }
                 }, true)
-                diff.dispatchUpdatesTo(adapter)
+                diff.dispatchUpdatesTo(EasyRecyclerAdapterUpdateCallback(adapter, headersCount))
                 /*val toRemove = oldPositions.filter { return@filter !newPositions.contains(it) }.toMutableList()
                 val toAdd = newPositions.filter { return@filter !oldPositions.contains(it) }
                 toRemove.forEach { position ->
