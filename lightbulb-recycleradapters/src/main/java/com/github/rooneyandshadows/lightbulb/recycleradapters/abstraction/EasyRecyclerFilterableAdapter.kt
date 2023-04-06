@@ -74,7 +74,6 @@ abstract class EasyRecyclerFilterableAdapter<ItemType : EasyAdapterDataModel> @J
 
             @SuppressLint("NotifyDataSetChanged")
             override fun publishResults(charSequence: CharSequence, filterResults: FilterResults) {
-
                 val adapter = this@EasyRecyclerFilterableAdapter
                 val newPositions = (filterResults.values as List<Int>).toMutableList()
                 val oldPositions = filteredPositions.toMutableList()

@@ -1,8 +1,9 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters;
+package com.github.rooneyandshadows.lightbulb.recycleradaptersdemo;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+
 
 public class MainActivity extends AppCompatActivity {
 

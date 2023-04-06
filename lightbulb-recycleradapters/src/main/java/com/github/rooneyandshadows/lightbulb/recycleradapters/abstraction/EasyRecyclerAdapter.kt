@@ -15,7 +15,7 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.Hea
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
-//TODO fix to use ConcatAdapter instead of wrapping with HeaderViewRecyclerAdapter https://medium.com/androiddevelopers/merge-adapters-sequentially-with-mergeadapter-294d2942127a
+//TODO fix to use ConcatAdapter instead of wrapping with HeaderViewRecyclerAdapter
 @Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
 @JvmSuppressWildcards
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
@@ -126,10 +126,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     fun restoreAdapterState(savedState: Bundle) {
         savedState.apply {
             val clz = Class.forName(SelectableItem::class.java.name) as Class<SelectableItem<ItemType>>
-            items = BundleUtils.getParcelableArrayList(
-                ADAPTER_ITEMS,
-                savedState, clz
-            )!!.toMutableList()
+            items = BundleUtils.getParcelableList(ADAPTER_ITEMS, this, clz) as MutableList<SelectableItem<ItemType>>
             itemsSelection = savedState.getIntegerArrayList(ADAPTER_SELECTION)!!
             selectableMode = EasyAdapterSelectableModes.valueOf(savedState.getInt(ADAPTER_SELECTION_MODE))
             onRestoreInstanceState(savedState)
