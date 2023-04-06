@@ -22,7 +22,6 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
     selectableMode: EasyAdapterSelectableModes = SELECT_NONE,
 ) : Adapter<ViewHolder>(), DefaultLifecycleObserver {
     private var recyclerView: RecyclerView? = null
-    private var wrapperAdapter: HeaderViewRecyclerAdapter? = null
     private var items: MutableList<SelectableItem<ItemType>> = mutableListOf()
     private var itemsSelection: MutableList<Int> = mutableListOf()
     private val onSelectionChangedListeners: MutableList<EasyAdapterSelectionChangedListener> = mutableListOf()
@@ -34,6 +33,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
             if (value != null)
                 lifecycleOwner!!.lifecycle.addObserver(this)
         }
+    var wrapperAdapter: HeaderViewRecyclerAdapter? = null
     var selectableMode: EasyAdapterSelectableModes = selectableMode
         private set
     val headersCount: Int
@@ -161,10 +161,6 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
 
     protected fun clearObservableCallbacksOnCollection() {
         for (item in items) clearObservableCallbacks(item.item)
-    }
-
-    fun setWrapperAdapter(wrapperAdapter: HeaderViewRecyclerAdapter?) {
-        this.wrapperAdapter = wrapperAdapter
     }
 
     @SuppressLint("NotifyDataSetChanged")
