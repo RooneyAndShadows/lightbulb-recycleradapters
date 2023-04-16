@@ -1,12 +1,28 @@
 package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection
 
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterObservableDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
 import java.util.function.Predicate
 
-abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel> {
+@Suppress("unused")
+@JvmSuppressWildcards
+abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel> : DefaultLifecycleObserver {
     private val onCollectionChangedListeners: MutableList<CollectionChangeListener> = mutableListOf()
+    var lifecycleOwner: LifecycleOwner? = null
+        set(value) {
+            val observer = this
+            field?.apply { lifecycle.removeObserver(observer) }
+            field = value
+            value?.apply { lifecycle.addObserver(observer) }
+        }
+
+    @Override
+    override fun onDestroy(owner: LifecycleOwner) {
+        clearObservableCallbacks()
+    }
 
     fun addOnCollectionChangedListener(onCollectionChangedListener: CollectionChangeListener) {
         onCollectionChangedListeners.add(onCollectionChangedListener)
@@ -15,22 +31,20 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel> {
     /**
      * Sets collection
      *
-     * @param collection - new collection to set
-     * @param adapter - adapter to notify for changes
-     * @return 'true' if the collection has been changed
+     * @param items new collection to set
+     * @param adapter adapter to notify for changes
      */
-    fun set(collection: List<ItemType>, adapter: EasyRecyclerAdapter<ItemType>) {
+    fun set(items: List<ItemType>, adapter: EasyRecyclerAdapter<ItemType>) {
         clearObservableCallbacks()
-        if (setInternally(collection, adapter))
+        if (setInternally(items, adapter))
             dispatchCollectionChangedEvent()
     }
 
     /**
      * Adds item at the end of the current collection
      *
-     * @param item - item to add
-     * @param adapter - adapter to notify for changes
-     * @return 'true' if the collection has been changed
+     * @param item item to add
+     * @param adapter adapter to notify for changes
      */
     fun add(item: ItemType, adapter: EasyRecyclerAdapter<ItemType>) {
         if (addInternally(item, adapter))
@@ -40,21 +54,19 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel> {
     /**
      * Adds items at the end of the current collection
      *
-     * @param collection - items to add
-     * @param adapter - adapter to notify for changes
-     * @return 'true' if the collection has been changed
+     * @param items items to add
+     * @param adapter adapter to notify for changes
      */
-    fun addAll(collection: List<ItemType>, adapter: EasyRecyclerAdapter<ItemType>) {
-        if (addAllInternally(collection, adapter))
+    fun addAll(items: List<ItemType>, adapter: EasyRecyclerAdapter<ItemType>) {
+        if (addAllInternally(items, adapter))
             dispatchCollectionChangedEvent()
     }
 
     /**
      * Removes item at desired position.
      *
-     * @param targetPosition - Desired position to be removed from the collection.
-     * @param adapter - adapter to notify for changes
-     * @return 'true' if the collection has been changed
+     * @param targetPosition Desired position to be removed from the collection.
+     * @param adapter adapter to notify for changes
      */
     fun remove(targetPosition: Int, adapter: EasyRecyclerAdapter<ItemType>) {
         if (!positionExists(targetPosition)) return
@@ -66,9 +78,8 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel> {
     /**
      * Removes items from the collection.
      *
-     * @param targets - Items to remove.
-     * @param adapter - adapter to notify for changes
-     * @return 'true' if the collection has been changed
+     * @param targets Items to remove.
+     * @param adapter adapter to notify for changes
      */
     fun removeAll(targets: List<ItemType>, adapter: EasyRecyclerAdapter<ItemType>) {
         val positionsToRemove = getPositions(targets)
@@ -81,12 +92,12 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel> {
     /**
      * Moves item from it's position to another position.
      *
-     * @param fromPosition - Position of the target item
-     * @param toPosition - Target position
-     * @param adapter - adapter to notify for changes
-     * @return 'true' if the collection has been changed
+     * @param fromPosition Position of the target item
+     * @param toPosition Target position
+     * @param adapter adapter to notify for changes
      */
     fun move(fromPosition: Int, toPosition: Int, adapter: EasyRecyclerAdapter<ItemType>) {
+        if (!positionExists(fromPosition) || !positionExists(toPosition)) return
         if (moveInternally(fromPosition, toPosition, adapter))
             dispatchCollectionChangedEvent()
     }
@@ -94,8 +105,7 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel> {
     /**
      * Clears the collection
      *
-     * @param adapter - adapter to notify for changes
-     * @return
+     * @param adapter adapter to notify for changes
      */
     fun clear(adapter: EasyRecyclerAdapter<ItemType>) {
         clearObservableCallbacks()
@@ -120,37 +130,86 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel> {
     protected open fun onCollectionChanged() {
     }
 
+    /**
+     * Sets collection
+     *
+     * @param items new collection to set
+     * @param adapter adapter to notify for changes
+     * @return 'true' if the collection has been changed
+     */
     protected abstract fun setInternally(
-        collection: List<ItemType>,
+        items: List<ItemType>,
         adapter: EasyRecyclerAdapter<ItemType>,
     ): Boolean
 
+    /**
+     * Adds item at the end of the current collection
+     *
+     * @param item item to add
+     * @param adapter adapter to notify for changes
+     * @return 'true' if the collection has been changed
+     */
     protected abstract fun addInternally(
         item: ItemType,
         adapter: EasyRecyclerAdapter<ItemType>,
     ): Boolean
 
+    /**
+     * Adds items at the end of the current collection
+     *
+     * @param items items to add
+     * @param adapter adapter to notify for changes
+     * @return 'true' if the collection has been changed
+     */
     protected abstract fun addAllInternally(
-        collection: List<ItemType>,
+        items: List<ItemType>,
         adapter: EasyRecyclerAdapter<ItemType>,
     ): Boolean
 
+    /**
+     * Removes item at desired position.
+     *
+     * @param targetPosition Desired position to be removed from the collection.
+     * @param adapter adapter to notify for changes
+     * @return 'true' if the collection has been changed
+     */
     protected abstract fun removeInternally(
         targetPosition: Int,
         adapter: EasyRecyclerAdapter<ItemType>,
     ): Boolean
 
+    /**
+     * Removes items from the collection.
+     *
+     * @param targets Items to remove.
+     * @param adapter adapter to notify for changes
+     * @return 'true' if the collection has been changed
+     */
     protected abstract fun removeAllInternally(
         targets: List<ItemType>,
         adapter: EasyRecyclerAdapter<ItemType>,
     ): Boolean
 
+    /**
+     * Moves item from it's position to another position.
+     *
+     * @param fromPosition Position of the target item
+     * @param toPosition Target position
+     * @param adapter adapter to notify for changes
+     * @return 'true' if the collection has been changed
+     */
     protected abstract fun moveInternally(
         fromPosition: Int,
         toPosition: Int,
         adapter: EasyRecyclerAdapter<ItemType>,
     ): Boolean
 
+    /**
+     * Clears the collection
+     *
+     * @param adapter adapter to notify for changes
+     * @return 'true' if the collection has been changed
+     */
     protected abstract fun clearInternally(
         adapter: EasyRecyclerAdapter<ItemType>,
     ): Boolean

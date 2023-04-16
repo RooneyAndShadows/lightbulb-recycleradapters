@@ -12,11 +12,7 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
 ) : EasyRecyclerAdapterCollection<ItemType>() {
     private var items: MutableList<ItemType> = mutableListOf()
 
-    override fun onCollectionChanged() {
-        super.onCollectionChanged()
-    }
-
-    override fun setInternally(collection: List<ItemType>, adapter: EasyRecyclerAdapter<ItemType>): Boolean {
+    override fun setInternally(items: List<ItemType>, adapter: EasyRecyclerAdapter<ItemType>): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -24,7 +20,7 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         TODO("Not yet implemented")
     }
 
-    override fun addAllInternally(collection: List<ItemType>, adapter: EasyRecyclerAdapter<ItemType>): Boolean {
+    override fun addAllInternally(items: List<ItemType>, adapter: EasyRecyclerAdapter<ItemType>): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -98,38 +94,35 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
 
     override fun getPositions(targets: List<ItemType>): IntArray {
         if (targets.isEmpty()) return IntArray(0)
-        val matchedPositions: MutableList<Int> = mutableListOf()
-        for (i in items.indices)
-            for (target in targets)
-                if (items[i] == target)
-                    matchedPositions.add(i)
-        val positions = IntArray(matchedPositions.size)
-        for (i in matchedPositions.indices) positions[i] = matchedPositions[i]
-        return positions
+        return mutableListOf<Int>().let { positions ->
+            targets.forEach {
+                val targetPos = items.indexOf(it)
+                if (targetPos != -1) positions.add(targetPos)
+            }
+            return@let positions.toIntArray()
+        }
     }
 
     override fun getPositions(targets: Array<ItemType>): IntArray {
         if (targets.isEmpty()) return IntArray(0)
-        val matchedPositions: MutableList<Int> = mutableListOf()
-        for (i in items.indices)
-            for (target in targets)
-                if (items[i] == target)
-                    matchedPositions.add(i)
-        val positions = IntArray(matchedPositions.size)
-        for (i in matchedPositions.indices) positions[i] = matchedPositions[i]
-        return positions
+        return mutableListOf<Int>().let { positions ->
+            targets.forEach {
+                val targetPos = items.indexOf(it)
+                if (targetPos != -1) positions.add(targetPos)
+            }
+            return@let positions.toIntArray()
+        }
     }
 
     override fun getPositionsByItemNames(targetNames: List<String>): IntArray {
         if (targetNames.isEmpty()) return IntArray(0)
-        val matchedPositions: MutableList<Int> = mutableListOf()
-        for (i in items.indices)
-            for (targetName in targetNames)
-                if (items[i].itemName == targetName)
-                    matchedPositions.add(i)
-        val positions = IntArray(matchedPositions.size)
-        for (i in matchedPositions.indices) positions[i] = matchedPositions[i]
-        return positions
+        return mutableListOf<Int>().let { positions ->
+            items.forEachIndexed { position, item ->
+                if (!targetNames.contains(item.itemName)) return@forEachIndexed
+                positions.add(position)
+            }
+            return@let positions.toIntArray()
+        }
     }
 
     override fun getPositionStrings(positions: IntArray): String {
