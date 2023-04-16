@@ -192,6 +192,8 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
         dispatchCollectionChangedEvent()
     }
 
+
+
     /**
      * Used to add new items in the adapter.
      *
