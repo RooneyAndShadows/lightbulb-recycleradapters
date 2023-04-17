@@ -68,6 +68,8 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> @JvmOverload
             return string
         }
 
+
+
     protected open fun onCollectionChanged() {
     }
 
