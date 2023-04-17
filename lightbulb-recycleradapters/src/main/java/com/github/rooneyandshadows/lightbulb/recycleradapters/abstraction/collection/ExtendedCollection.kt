@@ -64,14 +64,10 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
 
     fun selectAll(adapter: EasyRecyclerAdapter<ItemType>, newState: Boolean) {
         if (selectableMode == SELECT_NONE) return
-        var changed = false
-        for (positionToSelect in items.indices) {
-            val isItemSelected = items[positionToSelect].isSelected
-            if (newState == isItemSelected) continue
-            changed = true
-            selectInternally(adapter, positionToSelect, newState, true)
-        }
-        if (changed) dispatchSelectionChangeEvent()
+        var selectionChanged = false
+        for (positionToSelect in items.indices)
+            selectionChanged = selectionChanged || selectInternally(adapter, positionToSelect, newState, true)
+        if (selectionChanged) dispatchSelectionChangeEvent()
     }
 
     /**
@@ -89,10 +85,10 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         newState: Boolean,
         notifyChange: Boolean = true,
     ) {
-        if (selectableMode == SELECT_NONE || newState == isItemSelected(targetPosition)) return
+        if (selectableMode == SELECT_NONE) return
         if (selectableMode == SELECT_SINGLE) clearSelectionInternally(adapter, true)
-        selectInternally(adapter, targetPosition, newState, notifyChange)
-        dispatchSelectionChangeEvent()
+        val selectionChanged = selectInternally(adapter, targetPosition, newState, notifyChange)
+        if (selectionChanged) dispatchSelectionChangeEvent()
     }
 
     /**
@@ -121,7 +117,7 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
      * @param positions positions to be selected
      * @param newState new selected state for the positions
      * @param incremental Indicates whether the selection is applied incremental or initial.
-     * Important: Parameter is taken in account only when using multiple selection [EasyAdapterSelectableModes].
+     * Important: Parameter is taken in account only when using multiple selection - [EasyAdapterSelectableModes.SELECT_MULTIPLE].
      */
     fun selectPositions(
         adapter: EasyRecyclerAdapter<ItemType>,
@@ -412,7 +408,7 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         newState: Boolean,
         notifyForSelectionChange: Boolean,
     ): Boolean {
-        if (!positionExists(position) || isItemSelected(position) == newState) return false
+        if (!positionExists(position) || items[position].isSelected == newState) return false
         items[position].isSelected = newState
         if (notifyForSelectionChange) {
             adapter.apply {
