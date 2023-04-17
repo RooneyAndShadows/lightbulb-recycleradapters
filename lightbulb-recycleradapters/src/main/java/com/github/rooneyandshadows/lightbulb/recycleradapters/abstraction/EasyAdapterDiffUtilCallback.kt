@@ -1,12 +1,13 @@
 package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction
 
 import androidx.recyclerview.widget.DiffUtil
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.EasyRecyclerAdapterItemsComparator
 
 @JvmSuppressWildcards
 internal class EasyAdapterDiffUtilCallback<T : EasyAdapterDataModel>(
     private val oldData: List<SelectableItem<T>>?,
     private val newData: List<SelectableItem<T>>,
-    private val compareCallbacks: EasyAdapterItemsComparator<T>,
+    private val compareCallbacks: EasyRecyclerAdapterItemsComparator<T>,
 ) : DiffUtil.Callback() {
     override fun getOldListSize(): Int {
         return oldData!!.size
