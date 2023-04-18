@@ -9,11 +9,18 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.R
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.BasicCollection
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.ExtendedCollection
 import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
 @JvmSuppressWildcards
-open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>(SELECT_MULTIPLE) {
+open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ExtendedCollection<ItemType>>() {
+
+    override fun createCollection(): ExtendedCollection<ItemType> {
+        return ExtendedCollection(this, SELECT_MULTIPLE)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val context = parent.context
         val checkBoxView = LayoutInflater.from(parent.context).inflate(
@@ -46,12 +53,7 @@ open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecy
 
     @Override
     override fun getItemCount(): Int {
-        return getItems().size
-    }
-
-    @Override
-    override fun getItemName(item: ItemType): String? {
-        return item.itemName
+        return collection.size()
     }
 
     protected open fun getItemIcon(context: Context, item: ItemType): Drawable? {
@@ -71,9 +73,9 @@ open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecy
 
         fun bindItem() {
             selectableView.apply {
-                val item = getItem(bindingAdapterPosition) ?: return
-                val isSelectedInAdapter = isItemSelected(item)
-                val itemText = getItemName(item)
+                val item = collection.getItem(bindingAdapterPosition) ?: return
+                val isSelectedInAdapter = collection.isItemSelected(item)
+                val itemText = collection.getItemName(item)
                 val itemIcon = getItemIcon(context, item)
                 val itemIconBackground = getItemIconBackground(context, item)
                 if (isChecked != isSelectedInAdapter) isChecked = isSelectedInAdapter
@@ -87,9 +89,11 @@ open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecy
         }
 
         init {
-            selectableView.setOnCheckedListener { _: CheckBoxView?, isChecked: Boolean ->
-                selectableView.post {
-                    selectItemAt(bindingAdapterPosition, isChecked)
+            with(selectableView) {
+                setOnCheckedListener { _: CheckBoxView?, isChecked: Boolean ->
+                    post {
+                        collection.selectItemAt(bindingAdapterPosition, isChecked)
+                    }
                 }
             }
         }

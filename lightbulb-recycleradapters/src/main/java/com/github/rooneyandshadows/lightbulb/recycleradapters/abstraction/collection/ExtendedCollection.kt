@@ -11,10 +11,8 @@ import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
 import com.github.rooneyandshadows.lightbulb.commons.utils.BundleUtils
 import com.github.rooneyandshadows.lightbulb.commons.utils.ParcelUtils
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterDataModel
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapterUpdateCallback
 import java.util.function.Predicate
 import java.util.stream.Collectors
@@ -179,6 +177,12 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
             }
             if (selectionChanged) dispatchSelectionChangeEvent()
         }
+    }
+
+    fun getFilteredItem(position: Int): ItemType? {
+        val items = filteredItems
+        if (!positionExists(items, position)) return null
+        return items[position]
     }
 
     protected open fun filterItem(item: ItemType, filterQuery: String): Boolean {
@@ -364,7 +368,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     }
 
     override fun size(): Int {
-        return items.filter { return@filter it.isVisible }.size
+        return items.size
     }
 
     override fun isEmpty(): Boolean {
@@ -372,7 +376,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     }
 
     override fun positionExists(position: Int): Boolean {
-        return items.isNotEmpty() && position >= 0 && position < items.size
+        return positionExists(items, position)
     }
 
     override fun getItems(): List<ItemType> {
@@ -528,6 +532,10 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         return hasSelectionInPositions
     }
 
+    private fun positionExists(items: List<*>, position: Int): Boolean {
+        return items.isNotEmpty() && position >= 0 && position < items.size
+    }
+
     private fun dispatchSelectionChangeEvent() {
         selectionChangeListeners.forEach {
             it.onChanged(selectedPositionsAsArray)
@@ -633,5 +641,4 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     interface SelectionChangeListener {
         fun onChanged(newSelection: IntArray?)
     }
-
 }

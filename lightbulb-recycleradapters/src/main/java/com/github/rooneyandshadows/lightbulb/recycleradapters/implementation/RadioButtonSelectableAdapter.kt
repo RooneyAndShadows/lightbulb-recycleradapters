@@ -7,14 +7,20 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.github.rooneyandshadows.lightbulb.recycleradapters.R
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterDataModel
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.ExtendedCollection
 import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
 @JvmSuppressWildcards
-open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
-    EasyRecyclerAdapter<ItemType>(EasyAdapterSelectableModes.SELECT_SINGLE) {
+open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
+    : EasyRecyclerAdapter<ExtendedCollection<ItemType>>() {
+
+    override fun createCollection(): ExtendedCollection<ItemType> {
+        return ExtendedCollection(this, SELECT_SINGLE)
+    }
+
     @Override
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val context = parent.context
@@ -49,12 +55,7 @@ open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
 
     @Override
     override fun getItemCount(): Int {
-        return getItems().size
-    }
-
-    @Override
-    override fun getItemName(item: ItemType): String {
-        return item.itemName
+        return collection.size()
     }
 
     protected open fun getItemIcon(context: Context, item: ItemType): Drawable? {
@@ -74,9 +75,9 @@ open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
 
         fun bindItem() {
             selectableView.apply {
-                val item = getItem(bindingAdapterPosition) ?: return
-                val isSelectedInAdapter = isItemSelected(item)
-                val itemText = getItemName(item)
+                val item = collection.getItem(bindingAdapterPosition) ?: return
+                val isSelectedInAdapter = collection.isItemSelected(item)
+                val itemText = collection.getItemName(item)
                 val itemIcon = getItemIcon(context, item)
                 val itemIconBackground = getItemIconBackground(context, item)
                 if (isChecked != isSelectedInAdapter) isChecked = isSelectedInAdapter
@@ -90,9 +91,11 @@ open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel> :
         }
 
         init {
-            selectableView.setOnCheckedListener { _: RadioButtonView?, isChecked: Boolean ->
-                selectableView.post {
-                    selectItemAt(bindingAdapterPosition, isChecked)
+            with(selectableView) {
+                setOnCheckedListener { _: RadioButtonView?, isChecked: Boolean ->
+                    post {
+                        collection.selectItemAt(bindingAdapterPosition, isChecked)
+                    }
                 }
             }
         }

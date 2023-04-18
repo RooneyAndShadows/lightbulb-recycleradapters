@@ -11,12 +11,11 @@ import kotlin.math.abs
 class HeaderViewRecyclerAdapter @JvmOverloads constructor(
     private val recyclerView: RecyclerView,
     headerViewInfoList: MutableList<FixedViewInfo>? = null,
-    footerViewInfoList: MutableList<FixedViewInfo>? = null
+    footerViewInfoList: MutableList<FixedViewInfo>? = null,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val mHeaderViewInfoList: MutableList<FixedViewInfo> = headerViewInfoList ?: mutableListOf()
     private val mFooterViewInfoList: MutableList<FixedViewInfo> = footerViewInfoList ?: mutableListOf()
-    var adapter: RecyclerView.Adapter<RecyclerView.ViewHolder>? = null
-        private set
+    private var adapter: RecyclerView.Adapter<RecyclerView.ViewHolder>? = null
     private var mIsStaggeredGrid = false
 
     fun setDataAdapter(dataAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder>) {
@@ -96,7 +95,7 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
         val viewType: Int,
         val view: View,
         var localPosition: Int,
-        var viewListeners: ViewListeners?
+        var viewListeners: ViewListeners?,
     )
 
     interface ViewListeners {
@@ -284,7 +283,7 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
 
     private fun createHeaderFooterViewHolder(
         view: View,
-        listeners: ViewListeners?
+        listeners: ViewListeners?,
     ): RecyclerView.ViewHolder {
         if (mIsStaggeredGrid) {
             val layoutParams = StaggeredGridLayoutManager.LayoutParams(
