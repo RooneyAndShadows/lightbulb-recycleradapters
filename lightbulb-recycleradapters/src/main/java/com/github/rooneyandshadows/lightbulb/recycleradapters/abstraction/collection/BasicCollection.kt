@@ -1,26 +1,33 @@
 package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection
 
 import android.annotation.SuppressLint
+import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
+import com.github.rooneyandshadows.lightbulb.commons.utils.BundleUtils
+import com.github.rooneyandshadows.lightbulb.commons.utils.ParcelUtils
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
+@Suppress("unused")
 @JvmSuppressWildcards
 class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
-    private val itemsComparator: EasyRecyclerAdapterItemsComparator<ItemType>? = null,
-) : EasyRecyclerAdapterCollection<ItemType>() {
-    private var items: MutableList<ItemType> = mutableListOf()
+    adapter: EasyRecyclerAdapter<BasicCollection<ItemType>>,
+    private val itemsComparator: ItemsComparator<ItemType>? = null,
+) : EasyRecyclerAdapterCollection<ItemType>(adapter) {
+    private val items: MutableList<ItemType> = mutableListOf()
+
+    companion object {
+        private const val ADAPTER_ITEMS = "ADAPTER_ITEMS"
+    }
 
     @SuppressLint("NotifyDataSetChanged")
-    override fun setInternally(
-        collection: List<ItemType>,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
+    override fun setInternally(collection: List<ItemType>): Boolean {
         val hasStableIds = adapter.hasStableIds()
         val diffResult = if (itemsComparator != null && !hasStableIds) DiffUtil.calculateDiff(
             DiffUtilCallback(items, collection, itemsComparator), true
@@ -36,11 +43,8 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         return true
     }
 
-    override fun addInternally(
-        item: ItemType,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
+    override fun addInternally(item: ItemType): Boolean {
+        val recyclerView = adapter.recyclerView
         val headersCount = adapter.headersCount
         val needToUpdatePreviousLastItem = items.size > 0 && recyclerView!!.itemDecorationCount > 0
         val previousLastPosition = items.size + headersCount - 1
@@ -53,12 +57,9 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         return true
     }
 
-    override fun addAllInternally(
-        collection: List<ItemType>,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
+    override fun addAllInternally(collection: List<ItemType>): Boolean {
         if (collection.isEmpty()) return false
+        val recyclerView = adapter.recyclerView
         val headersCount = adapter.headersCount
         val needToUpdatePreviousLastItem = items.size > 0 && recyclerView!!.itemDecorationCount > 0
         val positionStart = items.size + 1
@@ -74,11 +75,7 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         return true
     }
 
-    override fun removeInternally(
-        targetPosition: Int,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
+    override fun removeInternally(targetPosition: Int): Boolean {
         if (!positionExists(targetPosition)) return false
         items.removeAt(targetPosition)
         adapter.apply {
@@ -87,11 +84,7 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         return true
     }
 
-    override fun removeAllInternally(
-        targets: List<ItemType>,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
+    override fun removeAllInternally(targets: List<ItemType>): Boolean {
         val positionsToRemove = getPositions(targets).sortedDescending()
         if (positionsToRemove.isEmpty()) return false
         items.removeIf { return@removeIf targets.contains(it) }
@@ -102,12 +95,7 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         return true
     }
 
-    override fun moveInternally(
-        fromPosition: Int,
-        toPosition: Int,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
+    override fun moveInternally(fromPosition: Int, toPosition: Int): Boolean {
         if (!positionExists(fromPosition) || !positionExists(toPosition)) return false
         val movingItem = items[fromPosition]
         items.removeAt(fromPosition)
@@ -118,7 +106,7 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         return true
     }
 
-    override fun clearInternally(adapter: EasyRecyclerAdapter<ItemType>, recyclerView: RecyclerView?): Boolean {
+    override fun clearInternally(): Boolean {
         if (items.isEmpty()) return false
         val notifyRangeStart = 0
         val notifyRangeEnd = items.size - 1
@@ -220,10 +208,40 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         }.joinToString(", ")
     }
 
+    override fun saveState(): Bundle {
+        return Bundle().apply {
+            BundleUtils.putParcelableList(ADAPTER_ITEMS, this, wrapToBasic(items))
+            onSaveInstanceState(this)
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    @Suppress("UNCHECKED_CAST")
+    override fun restoreState(savedState: Bundle) {
+        items.apply {
+            val clz = Class.forName(BasicItem::class.java.name) as Class<BasicItem<ItemType>>
+            BundleUtils.getParcelableList(ADAPTER_ITEMS, savedState, clz)?.apply {
+                val rawItems = map { return@map it.item }
+                clear()
+                addAll(rawItems)
+            }
+            adapter.notifyDataSetChanged()
+        }
+        onRestoreInstanceState(savedState)
+    }
+
+    private fun wrapToBasic(target: ItemType): BasicItem<ItemType> {
+        return BasicItem(target)
+    }
+
+    private fun wrapToBasic(target: List<ItemType>): List<BasicItem<ItemType>> {
+        return target.map { return@map wrapToBasic(it) }.toMutableList()
+    }
+
     private class DiffUtilCallback<T : EasyAdapterDataModel>(
         private val oldData: List<T>,
         private val newData: List<T>,
-        private val compareCallbacks: EasyRecyclerAdapterItemsComparator<T>,
+        private val compareCallbacks: ItemsComparator<T>,
     ) : DiffUtil.Callback() {
         override fun getOldListSize(): Int {
             return oldData.size
@@ -266,6 +284,40 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         override fun onChanged(position: Int, count: Int, payload: Any?) {
             val start = position + offset
             adapter.notifyItemRangeChanged(start, count, payload)
+        }
+    }
+
+    private class BasicItem<ItemType : EasyAdapterDataModel> : Parcelable {
+        var item: ItemType
+
+        constructor(item: ItemType) {
+            this.item = item
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        constructor(parcel: Parcel) {
+            val className: String = parcel.readString()!!
+            val clazz = Class.forName(className, false, BasicItem::class.java.classLoader) as Class<ItemType>
+            item = ParcelUtils.readParcelable(parcel, clazz) as ItemType
+        }
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeString(item.javaClass.name)
+            parcel.writeParcelable(item, flags)
+        }
+
+        override fun describeContents(): Int {
+            return 0
+        }
+
+        companion object CREATOR : Parcelable.Creator<BasicItem<EasyAdapterDataModel>> {
+            override fun createFromParcel(parcel: Parcel): BasicItem<EasyAdapterDataModel> {
+                return BasicItem(parcel)
+            }
+
+            override fun newArray(size: Int): Array<BasicItem<EasyAdapterDataModel>?> {
+                return arrayOfNulls(size)
+            }
         }
     }
 }

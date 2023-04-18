@@ -1,41 +1,64 @@
 package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection
 
 import android.annotation.SuppressLint
+import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
+import android.widget.Filter
+import android.widget.Filterable
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
+import com.github.rooneyandshadows.lightbulb.commons.utils.BundleUtils
 import com.github.rooneyandshadows.lightbulb.commons.utils.ParcelUtils
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapterUpdateCallback
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 @JvmSuppressWildcards
-class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
-    private val selectableMode: EasyAdapterSelectableModes = SELECT_NONE,
-    private val itemsComparator: EasyRecyclerAdapterItemsComparator<ItemType>? = null,
-) : EasyRecyclerAdapterCollection<ItemType>() {
+open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
+    adapter: EasyRecyclerAdapter<ExtendedCollection<ItemType>>,
+    private var selectableMode: EasyAdapterSelectableModes = SELECT_NONE,
+    private val itemsComparator: ItemsComparator<ItemType>? = null,
+) : EasyRecyclerAdapterCollection<ItemType>(adapter), Filterable {
     private val selectionChangeListeners: MutableList<SelectionChangeListener> = mutableListOf()
-    private val items: MutableList<SelectableItem<ItemType>> = mutableListOf()
+    private val items: MutableList<ExtendedItem<ItemType>> = mutableListOf()
     val hasSelection: Boolean
         get() = items.any { return@any it.isSelected }
     val selectedItems: List<ItemType>
         get() = items.filter { return@filter it.isSelected }.map { return@map it.item }
+    val filteredItems: List<ItemType>
+        get() = items.filter { return@filter it.isVisible }.map { return@map it.item }
     val selectedPositions: List<Int>
         get() = mutableListOf<Int>().apply {
             items.forEachIndexed { position, item ->
                 if (item.isSelected) add(position)
             }
         }
+    val filteredPositions: List<Int>
+        get() = mutableListOf<Int>().apply {
+            items.forEachIndexed { position, item ->
+                if (item.isVisible) add(position)
+            }
+        }
     val selectedPositionsAsArray: IntArray
         get() = selectedPositions.toIntArray()
+    val filteredPositionsAsArray: IntArray
+        get() = filteredPositions.toIntArray()
     val selectionString: String
         get() = selectedItems.joinToString(transform = { item -> item.itemName }, separator = ", ")
+    var currentFilterQuery: String = ""
+        private set
+
+    companion object {
+        private const val ADAPTER_ITEMS = "ADAPTER_ITEMS"
+        private const val ADAPTER_SELECTION_MODE = "ADAPTER_SELECTION_MODE"
+    }
 
     fun addOnSelectionChangeListener(listener: SelectionChangeListener) {
         if (selectionChangeListeners.contains(listener)) return
@@ -56,71 +79,65 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         return if (targetPosition == -1) false else isItemSelected(targetPosition)
     }
 
-    fun clearSelection(adapter: EasyRecyclerAdapter<ItemType>) {
+    fun clearSelection() {
         if (selectableMode == SELECT_NONE) return
-        if (clearSelectionInternally(adapter, true))
+        if (clearSelectionInternally(true))
             dispatchSelectionChangeEvent()
     }
 
-    fun selectAll(adapter: EasyRecyclerAdapter<ItemType>, newState: Boolean) {
+    fun selectAll(newState: Boolean) {
         if (selectableMode == SELECT_NONE) return
         var selectionChanged = false
         for (positionToSelect in items.indices)
-            selectionChanged = selectionChanged || selectInternally(adapter, positionToSelect, newState, true)
+            selectionChanged = selectionChanged || selectInternally(positionToSelect, newState, true)
         if (selectionChanged) dispatchSelectionChangeEvent()
     }
 
     /**
      * Used to un/select item corresponding to particular position in the adapter.
      *
-     * @param adapter adapter to notify in case of change
      * @param targetPosition position to be un/selected
      * @param newState true -> select | false -> unselect.
      * @param notifyChange whether to notify registered observers in case of change.
      */
     @JvmOverloads
     fun selectItemAt(
-        adapter: EasyRecyclerAdapter<ItemType>,
         targetPosition: Int,
         newState: Boolean,
         notifyChange: Boolean = true,
     ) {
         if (selectableMode == SELECT_NONE) return
-        if (selectableMode == SELECT_SINGLE) clearSelectionInternally(adapter, true)
-        val selectionChanged = selectInternally(adapter, targetPosition, newState, notifyChange)
+        if (selectableMode == SELECT_SINGLE) clearSelectionInternally(true)
+        val selectionChanged = selectInternally(targetPosition, newState, notifyChange)
         if (selectionChanged) dispatchSelectionChangeEvent()
     }
 
     /**
      * Used to select/select particular item in the adapter.
      *
-     * @param adapter adapter to notify in case of change
      * @param targetItem item to be selected/unselected
      * @param newState true -> select | false -> unselect.
      * @param notifyChange whether to notify registered observers in case of change.
      */
     fun selectItem(
-        adapter: EasyRecyclerAdapter<ItemType>,
         targetItem: ItemType,
         newState: Boolean,
         notifyChange: Boolean = true,
     ) {
         val index = getPosition(targetItem)
         if (index == -1) return
-        selectItemAt(adapter, index, newState, notifyChange)
+        selectItemAt(index, newState, notifyChange)
     }
 
     /**
      * * Used to select items corresponding to array of positions in the adapter.
      *
-     * @param adapter adapter to notify in case of change
      * @param positions positions to be selected
      * @param newState new selected state for the positions
      * @param incremental Indicates whether the selection is applied incremental or initial.
      * Important: Parameter is taken in account only when using multiple selection - [EasyAdapterSelectableModes.SELECT_MULTIPLE].
      */
     fun selectPositions(
-        adapter: EasyRecyclerAdapter<ItemType>,
         positions: IntArray,
         newState: Boolean,
         incremental: Boolean,
@@ -129,41 +146,110 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         if (selectableMode == SELECT_NONE) return
         if (targetPositions.isEmpty()) {
             if (!hasSelection) return
-            if (clearSelectionInternally(adapter, true))
+            if (clearSelectionInternally(true))
                 dispatchSelectionChangeEvent()
             return
         }
         if (selectableMode == SELECT_SINGLE) {
             val targetPosition = targetPositions[0]
             if (!positionExists(targetPosition) || newState == isItemSelected(targetPosition)) return
-            clearSelectionInternally(adapter, true)
-            val selectionChanged = selectInternally(adapter, targetPosition, newState, true)
+            clearSelectionInternally(true)
+            val selectionChanged = selectInternally(targetPosition, newState, notifyForSelectionChange = true)
             if (selectionChanged) dispatchSelectionChangeEvent()
         }
         if (selectableMode == SELECT_MULTIPLE) {
             var selectionChanged = false
             if (incremental) {
                 targetPositions.forEach { position ->
-                    selectionChanged = selectionChanged || selectInternally(adapter, position, newState, true)
+                    selectionChanged = selectionChanged || selectInternally(
+                        position,
+                        newState,
+                        notifyForSelectionChange = true
+                    )
                 }
             } else {
                 items.forEachIndexed { position, _ ->
                     val stateToSet = if (targetPositions.contains(position)) newState else false
-                    selectionChanged = selectionChanged || selectInternally(adapter, position, stateToSet, true)
+                    selectionChanged = selectionChanged || selectInternally(
+                        position,
+                        stateToSet,
+                        notifyForSelectionChange = true
+                    )
                 }
             }
             if (selectionChanged) dispatchSelectionChangeEvent()
         }
     }
 
+    protected open fun filterItem(item: ItemType, filterQuery: String): Boolean {
+        return true
+    }
+
+    @Override
+    final override fun getFilter(): Filter {
+        return object : Filter() {
+            @Override
+            override fun performFiltering(charSequence: CharSequence): FilterResults {
+                currentFilterQuery = charSequence.toString()
+                val result: MutableList<Int> = mutableListOf()
+                if (currentFilterQuery.isBlank()) {
+                    result.addAll(items.indices)
+                } else {
+                    items.forEachIndexed { index, extendedItem ->
+                        if (filterItem(extendedItem.item, currentFilterQuery))
+                            result.add(index)
+                    }
+                }
+                val filterResults = FilterResults()
+                filterResults.values = result
+                return filterResults
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            @SuppressLint("NotifyDataSetChanged")
+            override fun publishResults(charSequence: CharSequence, filterResults: FilterResults) {
+                val newPositions = (filterResults.values as List<Int>).toMutableList()
+                val oldPositions = filteredPositions
+                items.forEachIndexed { position, extendedItem ->
+                    extendedItem.isVisible = newPositions.contains(position)
+                }
+                val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                    override fun getOldListSize(): Int {
+                        return oldPositions.size
+                    }
+
+                    override fun getNewListSize(): Int {
+                        return newPositions.size
+                    }
+
+                    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                        return oldPositions[oldItemPosition] == newPositions[newItemPosition]
+                    }
+
+                    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                        return true
+                    }
+                }, true)
+                diff.dispatchUpdatesTo(EasyRecyclerAdapterUpdateCallback(adapter, adapter.headersCount))
+                /*val toRemove = oldPositions.filter { return@filter !newPositions.contains(it) }.toMutableList()
+                val toAdd = newPositions.filter { return@filter !oldPositions.contains(it) }
+                toRemove.forEach { position ->
+                    val posToRemove = oldPositions.indexOf(position)
+                    oldPositions.removeAt(posToRemove)
+                    notifyItemRemoved(posToRemove)
+                }
+                toAdd.forEach {
+                    val posToAdd = newPositions.indexOf(it)
+                    notifyItemInserted(posToAdd)
+                }*/
+            }
+        }
+    }
+
     @SuppressLint("NotifyDataSetChanged")
-    override fun setInternally(
-        collection: List<ItemType>,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
-        val selectionChanged = clearSelectionInternally(adapter, false)
-        val selectableCollection = wrapToSelectable(collection)
+    override fun setInternally(collection: List<ItemType>): Boolean {
+        val selectionChanged = clearSelectionInternally(false)
+        val selectableCollection = wrapToExtended(collection)
         val hasStableIds = adapter.hasStableIds()
         val diffResult = if (itemsComparator != null && !hasStableIds) DiffUtil.calculateDiff(
             DiffUtilCallback(items, selectableCollection, itemsComparator), true
@@ -180,39 +266,38 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         return true
     }
 
-    override fun addInternally(
-        item: ItemType,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
-        val selectableItem = wrapToSelectable(item)
-        val headersCount = adapter.headersCount
-        val needToUpdatePreviousLastItem = items.size > 0 && recyclerView!!.itemDecorationCount > 0
-        val previousLastPosition = items.size + headersCount - 1
-        items.add(selectableItem)
+    override fun addInternally(item: ItemType): Boolean {
+        val extendedItem = wrapToExtended(item)
+        items.add(extendedItem)
+        if (!extendedItem.isVisible) return true
         adapter.apply {
+            val currentlyVisible = filteredItems
+            val recyclerView = adapter.recyclerView
+            val headersCount = adapter.headersCount
+            val needToUpdatePreviousLastItem = currentlyVisible.isNotEmpty() && recyclerView!!.itemDecorationCount > 0
+            val previousLastPosition = currentlyVisible.size + headersCount - 1
             if (needToUpdatePreviousLastItem)
                 notifyItemChanged(previousLastPosition, false) // update last item decoration without animation
-            notifyItemInserted(items.size + headersCount - 1)
+            notifyItemInserted(currentlyVisible.size + headersCount - 1)
         }
         return true
     }
 
-    override fun addAllInternally(
-        collection: List<ItemType>,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
+    override fun addAllInternally(collection: List<ItemType>): Boolean {
         if (collection.isEmpty()) return false
-        val selectableCollection = wrapToSelectable(collection)
-        val headersCount = adapter.headersCount
-        val needToUpdatePreviousLastItem = items.size > 0 && recyclerView!!.itemDecorationCount > 0
-        val positionStart = items.size + 1
-        val newItemsCount = collection.size
-        items.addAll(selectableCollection)
+        val extendedCollection = wrapToExtended(collection)
+        items.addAll(extendedCollection)
+        val filtered = extendedCollection.filter { return@filter it.isVisible }
+        if (filtered.isEmpty()) return true
         adapter.apply {
+            val currentlyVisible = filteredItems
+            val recyclerView = adapter.recyclerView
+            val headersCount = adapter.headersCount
+            val needToUpdatePreviousLastItem = currentlyVisible.isNotEmpty() && recyclerView!!.itemDecorationCount > 0
+            val positionStart = currentlyVisible.size + 1
+            val newItemsCount = filtered.size
             if (needToUpdatePreviousLastItem) {
-                val previousLastItem = items.size + headersCount - 1
+                val previousLastItem = currentlyVisible.size + headersCount - 1
                 notifyItemChanged(previousLastItem, false)
             }// update last item decoration without animation
             notifyItemRangeInserted(positionStart + headersCount, newItemsCount + headersCount)
@@ -220,31 +305,34 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         return true
     }
 
-    override fun removeInternally(
-        targetPosition: Int,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
+    override fun removeInternally(targetPosition: Int): Boolean {
         if (!positionExists(targetPosition)) return false
-        val selectionChanged = items[targetPosition].isSelected
+        val item = items[targetPosition]
+        val selectionChanged = selectInternally(targetPosition, newState = false, notifyForSelectionChange = false)
         items.removeAt(targetPosition)
-        adapter.apply {
-            notifyItemRemoved(targetPosition + headersCount)
+        if (item.isVisible) adapter.apply {
+            val posToRemove = filteredItems.indexOf(item.item)
+            notifyItemRemoved(posToRemove + headersCount)
         }
         if (selectionChanged) dispatchSelectionChangeEvent()
         return true
     }
 
-    override fun removeAllInternally(
-        targets: List<ItemType>,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
-        val positionsToRemove = getPositions(targets).sortedDescending()
-        if (positionsToRemove.isEmpty()) return false
-        val selectionChanged = isAtLeastOneSelected(positionsToRemove)
-        items.removeIf { return@removeIf targets.contains(it.item) }
+    override fun removeAllInternally(targets: List<ItemType>): Boolean {
+        val positions = getPositions(targets).sortedDescending()
+        if (positions.isEmpty()) return false
+        val selectionChanged = isAtLeastOneSelected(positions)
+        val removedItems = items.removeIf { return@removeIf targets.contains(it.item) }
+        if (!removedItems) return false
         adapter.apply {
+            val visibleItems = filteredItems
+            val positionsToRemove = mutableListOf<Int>()
+            positions.forEach {
+                val itemToRemove = items[it]
+                val positionToRemove = visibleItems.indexOf(itemToRemove.item)
+                if (positionToRemove == -1) return@forEach
+                positionsToRemove.add(positionToRemove)
+            }
             for (position in positionsToRemove)
                 notifyItemRemoved(position + headersCount)
         }
@@ -252,29 +340,23 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         return true
     }
 
-    override fun moveInternally(
-        fromPosition: Int,
-        toPosition: Int,
-        adapter: EasyRecyclerAdapter<ItemType>,
-        recyclerView: RecyclerView?,
-    ): Boolean {
+    override fun moveInternally(fromPosition: Int, toPosition: Int): Boolean {
         if (!positionExists(fromPosition) || !positionExists(toPosition)) return false
         val movingItem = items[fromPosition]
         items.removeAt(fromPosition)
         items.add(toPosition, movingItem)
-        adapter.apply {
-            notifyItemMoved(fromPosition + headersCount, toPosition + headersCount)
-        }
+        val needsNotify = movingItem.isVisible
+        if (needsNotify) filter.filter(currentFilterQuery)
         return true
     }
 
-    override fun clearInternally(adapter: EasyRecyclerAdapter<ItemType>, recyclerView: RecyclerView?): Boolean {
+    override fun clearInternally(): Boolean {
         if (items.isEmpty()) return false
-        val selectionChanged = clearSelectionInternally(adapter, false)
-        val notifyRangeStart = 0
-        val notifyRangeEnd = items.size - 1
+        val selectionChanged = clearSelectionInternally(false)
         items.clear()
         adapter.apply {
+            val notifyRangeStart = 0
+            val notifyRangeEnd = filteredItems.size - 1
             notifyItemRangeRemoved(notifyRangeStart + headersCount, notifyRangeEnd + headersCount)
         }
         if (selectionChanged) dispatchSelectionChangeEvent()
@@ -282,7 +364,7 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
     }
 
     override fun size(): Int {
-        return items.size
+        return items.filter { return@filter it.isVisible }.size
     }
 
     override fun isEmpty(): Boolean {
@@ -376,24 +458,44 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         }.joinToString(", ")
     }
 
-    private fun wrapToSelectable(target: ItemType): SelectableItem<ItemType> {
-        return SelectableItem(false, target)
+    override fun saveState(): Bundle {
+        return Bundle().apply {
+            BundleUtils.putParcelableList(ADAPTER_ITEMS, this, items)
+            BundleUtils.putInt(ADAPTER_SELECTION_MODE, this, selectableMode.value)
+            onSaveInstanceState(this)
+        }
     }
 
-    private fun wrapToSelectable(target: List<ItemType>): MutableList<SelectableItem<ItemType>> {
-        return target.map { return@map wrapToSelectable(it) }.toMutableList()
+    @SuppressLint("NotifyDataSetChanged")
+    @Suppress("UNCHECKED_CAST")
+    override fun restoreState(savedState: Bundle) {
+        selectableMode = EasyAdapterSelectableModes.valueOf(savedState.getInt(ADAPTER_SELECTION_MODE))
+        items.apply {
+            val clz = Class.forName(ExtendedItem::class.java.name) as Class<ExtendedItem<ItemType>>
+            BundleUtils.getParcelableList(ADAPTER_ITEMS, savedState, clz)?.apply {
+                clear()
+                addAll(this)
+            }
+        }
+        adapter.notifyDataSetChanged()
     }
 
-    private fun clearSelectionInternally(
-        adapter: EasyRecyclerAdapter<ItemType>,
-        notifyForSelectionChange: Boolean,
-    ): Boolean {
+    private fun wrapToExtended(target: ItemType): ExtendedItem<ItemType> {
+        val isVisible = filterItem(target, currentFilterQuery)
+        return ExtendedItem(isSelected = false, isVisible, item = target)
+    }
+
+    private fun wrapToExtended(target: List<ItemType>): MutableList<ExtendedItem<ItemType>> {
+        return target.map { return@map wrapToExtended(it) }.toMutableList()
+    }
+
+    private fun clearSelectionInternally(notifyForSelectionChange: Boolean): Boolean {
         if (!hasSelection) return false
-        items.forEachIndexed { position, selectableItem ->
-            val isSelected = selectableItem.isSelected
+        items.forEachIndexed { position, item ->
+            val isSelected = item.isSelected
             if (!isSelected) return@forEachIndexed
             adapter.apply {
-                if (notifyForSelectionChange) {
+                if (notifyForSelectionChange && item.isVisible) {
                     val positionToNotify = position + headersCount
                     adapter.notifyItemChanged(positionToNotify, false)
                 }
@@ -402,15 +504,11 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         return true
     }
 
-    private fun selectInternally(
-        adapter: EasyRecyclerAdapter<ItemType>,
-        position: Int,
-        newState: Boolean,
-        notifyForSelectionChange: Boolean,
-    ): Boolean {
+    private fun selectInternally(position: Int, newState: Boolean, notifyForSelectionChange: Boolean): Boolean {
         if (!positionExists(position) || items[position].isSelected == newState) return false
-        items[position].isSelected = newState
-        if (notifyForSelectionChange) {
+        val item = items[position]
+        item.isSelected = newState
+        if (notifyForSelectionChange && item.isVisible) {
             adapter.apply {
                 val positionToNotify = position + headersCount
                 notifyItemChanged(positionToNotify, false)
@@ -437,9 +535,9 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
     }
 
     private class DiffUtilCallback<T : EasyAdapterDataModel>(
-        private val oldData: List<SelectableItem<T>>,
-        private val newData: List<SelectableItem<T>>,
-        private val compareCallbacks: EasyRecyclerAdapterItemsComparator<T>,
+        private val oldData: List<ExtendedItem<T>>,
+        private val newData: List<ExtendedItem<T>>,
+        private val compareCallbacks: ItemsComparator<T>,
     ) : DiffUtil.Callback() {
         override fun getOldListSize(): Int {
             return oldData.size
@@ -456,7 +554,9 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
             val oldItem = oldData[oldItemPosition]
             val newItem = newData[newItemPosition]
-            return oldItem.isSelected == newItem.isSelected && compareCallbacks.compareItemsContent(
+            val selectedStateEquals = oldItem.isSelected == newItem.isSelected
+            val visibleStateEquals = oldItem.isVisible == newItem.isVisible
+            return selectedStateEquals && visibleStateEquals && compareCallbacks.compareItemsContent(
                 oldItem.item,
                 newItem.item
             )
@@ -488,39 +588,43 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
         }
     }
 
-    private class SelectableItem<ItemType : EasyAdapterDataModel> : Parcelable {
+    private class ExtendedItem<ItemType : EasyAdapterDataModel> : Parcelable {
         var isSelected: Boolean
+        var isVisible: Boolean
         var item: ItemType
 
-        constructor(isSelected: Boolean, item: ItemType) {
+        constructor(isSelected: Boolean, isVisible: Boolean, item: ItemType) {
             this.isSelected = isSelected
+            this.isVisible = isVisible
             this.item = item
         }
 
         @Suppress("UNCHECKED_CAST")
         constructor(parcel: Parcel) {
-            val className: String = parcel.readString()!!
-            isSelected = parcel.readByte() != 0.toByte()
-            val clazz = Class.forName(className) as Class<ItemType>
+            val className = ParcelUtils.readString(parcel)!!
+            val clazz = Class.forName(className, false, ExtendedItem::class.java.classLoader) as Class<ItemType>
+            isSelected = ParcelUtils.readBoolean(parcel)!!
+            isVisible = ParcelUtils.readBoolean(parcel)!!
             item = ParcelUtils.readParcelable(parcel, clazz) as ItemType
         }
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
-            parcel.writeString(item.javaClass.name)
-            parcel.writeByte(if (isSelected) 1 else 0)
-            parcel.writeParcelable(item, flags)
+            ParcelUtils.writeString(parcel, item.javaClass.name)
+            ParcelUtils.writeBoolean(parcel, isSelected)
+            ParcelUtils.writeBoolean(parcel, isVisible)
+            ParcelUtils.writeParcelable(parcel, item)
         }
 
         override fun describeContents(): Int {
             return 0
         }
 
-        companion object CREATOR : Parcelable.Creator<SelectableItem<EasyAdapterDataModel>> {
-            override fun createFromParcel(parcel: Parcel): SelectableItem<EasyAdapterDataModel> {
-                return SelectableItem(parcel)
+        companion object CREATOR : Parcelable.Creator<ExtendedItem<EasyAdapterDataModel>> {
+            override fun createFromParcel(parcel: Parcel): ExtendedItem<EasyAdapterDataModel> {
+                return ExtendedItem(parcel)
             }
 
-            override fun newArray(size: Int): Array<SelectableItem<EasyAdapterDataModel>?> {
+            override fun newArray(size: Int): Array<ExtendedItem<EasyAdapterDataModel>?> {
                 return arrayOfNulls(size)
             }
         }
@@ -529,4 +633,5 @@ class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads construc
     interface SelectionChangeListener {
         fun onChanged(newSelection: IntArray?)
     }
+
 }
