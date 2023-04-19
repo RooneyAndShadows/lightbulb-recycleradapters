@@ -7,9 +7,8 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.*
 import java.util.function.Predicate
 
 @Suppress("unused")
-@JvmSuppressWildcards
 abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
-    val adapter: EasyRecyclerAdapter<out EasyRecyclerAdapterCollection<ItemType>>
+    val adapter: EasyRecyclerAdapter<ItemType>,
 ) : DefaultLifecycleObserver {
     private val onCollectionChangedListeners: MutableList<CollectionChangeListener> = mutableListOf()
     var lifecycleOwner: LifecycleOwner? = null

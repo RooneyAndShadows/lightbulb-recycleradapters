@@ -15,7 +15,10 @@ import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
 @JvmSuppressWildcards
 open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
-    : EasyRecyclerAdapter<ExtendedCollection<ItemType>>() {
+    : EasyRecyclerAdapter<ItemType>() {
+
+    override val collection: ExtendedCollection<ItemType>
+        get() = super.collection as ExtendedCollection<ItemType>
 
     override fun createCollection(): ExtendedCollection<ItemType> {
         return ExtendedCollection(this, SELECT_SINGLE)

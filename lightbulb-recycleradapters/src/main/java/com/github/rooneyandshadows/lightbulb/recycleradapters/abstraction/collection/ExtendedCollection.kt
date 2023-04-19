@@ -18,9 +18,8 @@ import java.util.function.Predicate
 import java.util.stream.Collectors
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-@JvmSuppressWildcards
 open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
-    adapter: EasyRecyclerAdapter<ExtendedCollection<ItemType>>,
+    adapter: EasyRecyclerAdapter<ItemType>,
     private var selectableMode: EasyAdapterSelectableModes = SELECT_NONE,
     private val itemsComparator: ItemsComparator<ItemType>? = null,
 ) : EasyRecyclerAdapterCollection<ItemType>(adapter), Filterable {

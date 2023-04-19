@@ -17,7 +17,7 @@ import java.util.stream.Collectors
 @Suppress("unused")
 @JvmSuppressWildcards
 class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
-    adapter: EasyRecyclerAdapter<BasicCollection<ItemType>>,
+    adapter: EasyRecyclerAdapter<ItemType>,
     private val itemsComparator: ItemsComparator<ItemType>? = null,
 ) : EasyRecyclerAdapterCollection<ItemType>(adapter) {
     private val items: MutableList<ItemType> = mutableListOf()

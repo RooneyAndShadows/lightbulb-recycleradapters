@@ -10,12 +10,15 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAd
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.BasicCollection
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.EasyRecyclerAdapterCollection
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.ExtendedCollection
 import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
 @JvmSuppressWildcards
-open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ExtendedCollection<ItemType>>() {
+open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>() {
+    override val collection: ExtendedCollection<ItemType>
+        get() = super.collection as ExtendedCollection<ItemType>
 
     override fun createCollection(): ExtendedCollection<ItemType> {
         return ExtendedCollection(this, SELECT_MULTIPLE)
