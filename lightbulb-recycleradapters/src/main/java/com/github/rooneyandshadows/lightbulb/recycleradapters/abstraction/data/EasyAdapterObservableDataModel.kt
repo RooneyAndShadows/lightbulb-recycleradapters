@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction
+package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data
 
 import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback

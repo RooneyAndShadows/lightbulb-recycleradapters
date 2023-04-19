@@ -1,58 +1,53 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters.implementation
+package com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.adapters
 
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.R
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterDataModel
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.ExtendedCollection
-import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView
+import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection
+import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection.SelectableModes.SELECT_MULTIPLE
+import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
-@JvmSuppressWildcards
-open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
-    : EasyRecyclerAdapter<ItemType>() {
-
+open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>() {
     override val collection: ExtendedCollection<ItemType>
         get() = super.collection as ExtendedCollection<ItemType>
 
     override fun createCollection(): ExtendedCollection<ItemType> {
-        return ExtendedCollection(this, SELECT_SINGLE)
+        return ExtendedCollection(this, SELECT_MULTIPLE)
     }
 
-    @Override
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val context = parent.context
-        val radioButtonView = LayoutInflater.from(parent.context).inflate(
-            R.layout.layout_radio_button,
-            parent,
-            false
-        ) as RadioButtonView
+        val checkBoxView = LayoutInflater.from(parent.context).inflate(
+            R.layout.layout_checkbox_button,
+            parent, false
+        ) as CheckBoxView
         val padding = getItemPadding(context)
-        if (padding != null && padding.size == 4) radioButtonView.setPadding(
+        if (padding != null && padding.size == 4) checkBoxView.setPadding(
             padding[0],
             padding[1],
             padding[2],
             padding[3]
         )
-        return RadioButtonViewHolder(radioButtonView)
+        return CheckBoxViewHolder(checkBoxView)
     }
 
     @Suppress("UNCHECKED_CAST")
     @Override
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val vHolder: RadioButtonViewHolder = holder as RadioButtonSelectableAdapter<ItemType>.RadioButtonViewHolder
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val vHolder: CheckBoxViewHolder = holder as CheckBoxSelectableAdapter<ItemType>.CheckBoxViewHolder
         vHolder.bindItem()
     }
 
     @Suppress("UNCHECKED_CAST")
     @Override
-    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
-        val vh: RadioButtonViewHolder = holder as RadioButtonSelectableAdapter<ItemType>.RadioButtonViewHolder
+    override fun onViewRecycled(holder: ViewHolder) {
+        val vh: CheckBoxViewHolder = holder as CheckBoxSelectableAdapter<ItemType>.CheckBoxViewHolder
         vh.recycle()
     }
 
@@ -73,8 +68,8 @@ open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
         return null
     }
 
-    inner class RadioButtonViewHolder(radioButtonView: RadioButtonView) : RecyclerView.ViewHolder(radioButtonView) {
-        private var selectableView: RadioButtonView = itemView as RadioButtonView
+    inner class CheckBoxViewHolder internal constructor(checkBoxView: CheckBoxView) : ViewHolder(checkBoxView) {
+        private var selectableView: CheckBoxView = itemView as CheckBoxView
 
         fun bindItem() {
             selectableView.apply {
@@ -95,7 +90,7 @@ open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
 
         init {
             with(selectableView) {
-                setOnCheckedListener { _: RadioButtonView?, isChecked: Boolean ->
+                setOnCheckedListener { _: CheckBoxView?, isChecked: Boolean ->
                     post {
                         collection.selectItemAt(bindingAdapterPosition, isChecked)
                     }

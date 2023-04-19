@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection
+package com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -9,13 +9,13 @@ import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
 import com.github.rooneyandshadows.lightbulb.commons.utils.BundleUtils
 import com.github.rooneyandshadows.lightbulb.commons.utils.ParcelUtils
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterDataModel
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.EasyRecyclerAdapterCollection
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
 @Suppress("unused")
-@JvmSuppressWildcards
 class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
     adapter: EasyRecyclerAdapter<ItemType>,
     private val itemsComparator: ItemsComparator<ItemType>? = null,

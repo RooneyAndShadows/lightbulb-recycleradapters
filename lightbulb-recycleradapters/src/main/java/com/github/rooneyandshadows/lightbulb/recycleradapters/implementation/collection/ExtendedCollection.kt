@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection
+package com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -12,15 +12,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.rooneyandshadows.lightbulb.commons.utils.BundleUtils
 import com.github.rooneyandshadows.lightbulb.commons.utils.ParcelUtils
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.*
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyAdapterSelectableModes.*
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapterUpdateCallback
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.EasyRecyclerAdapterCollection
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
+import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection.SelectableModes.*
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
     adapter: EasyRecyclerAdapter<ItemType>,
-    private var selectableMode: EasyAdapterSelectableModes = SELECT_NONE,
+    private var selectableMode: SelectableModes = SELECT_NONE,
     private val itemsComparator: ItemsComparator<ItemType>? = null,
 ) : EasyRecyclerAdapterCollection<ItemType>(adapter), Filterable {
     private val selectionChangeListeners: MutableList<SelectionChangeListener> = mutableListOf()
@@ -132,7 +133,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
      * @param positions positions to be selected
      * @param newState new selected state for the positions
      * @param incremental Indicates whether the selection is applied incremental or initial.
-     * Important: Parameter is taken in account only when using multiple selection - [EasyAdapterSelectableModes.SELECT_MULTIPLE].
+     * Important: Parameter is taken in account only when using multiple selection - [SelectableModes.SELECT_MULTIPLE].
      */
     fun selectPositions(
         positions: IntArray,
@@ -233,7 +234,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
                         return true
                     }
                 }, true)
-                diff.dispatchUpdatesTo(EasyRecyclerAdapterUpdateCallback(adapter, adapter.headersCount))
+                diff.dispatchUpdatesTo(UpdateCallback(adapter, adapter.headersCount))
                 /*val toRemove = oldPositions.filter { return@filter !newPositions.contains(it) }.toMutableList()
                 val toAdd = newPositions.filter { return@filter !oldPositions.contains(it) }
                 toRemove.forEach { position ->
@@ -472,7 +473,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     @SuppressLint("NotifyDataSetChanged")
     @Suppress("UNCHECKED_CAST")
     override fun restoreState(savedState: Bundle) {
-        selectableMode = EasyAdapterSelectableModes.valueOf(savedState.getInt(ADAPTER_SELECTION_MODE))
+        selectableMode = SelectableModes.valueOf(savedState.getInt(ADAPTER_SELECTION_MODE))
         items.apply {
             val clz = Class.forName(ExtendedItem::class.java.name) as Class<ExtendedItem<ItemType>>
             BundleUtils.getParcelableList(ADAPTER_ITEMS, savedState, clz)?.apply {
@@ -634,6 +635,38 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
             override fun newArray(size: Int): Array<ExtendedItem<EasyAdapterDataModel>?> {
                 return arrayOfNulls(size)
             }
+        }
+    }
+
+    private class UpdateCallback(
+        private val adapter: RecyclerView.Adapter<*>,
+        private val offset: Int,
+    ) : ListUpdateCallback {
+        override fun onInserted(position: Int, count: Int) {
+            adapter.notifyItemRangeInserted(position + offset, count)
+        }
+
+        override fun onRemoved(position: Int, count: Int) {
+            adapter.notifyItemRangeRemoved(position + offset, count)
+        }
+
+        override fun onMoved(fromPosition: Int, toPosition: Int) {
+            adapter.notifyItemMoved(fromPosition + offset, toPosition)
+        }
+
+        override fun onChanged(position: Int, count: Int, payload: Any?) {
+            adapter.notifyItemRangeChanged(position + offset, count)
+        }
+    }
+
+    enum class SelectableModes(val value: Int) {
+        SELECT_NONE(1),
+        SELECT_SINGLE(2),
+        SELECT_MULTIPLE(3);
+
+        companion object {
+            @JvmStatic
+            fun valueOf(value: Int) = values().first { it.value == value }
         }
     }
 

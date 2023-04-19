@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.recycleradapters.implementation
+package com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.adapters
 
 import android.view.View
 import android.view.ViewGroup
