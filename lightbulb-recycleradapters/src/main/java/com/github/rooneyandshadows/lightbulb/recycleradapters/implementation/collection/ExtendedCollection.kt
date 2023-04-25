@@ -290,11 +290,11 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     override fun addAllInternally(collection: List<ItemType>): Boolean {
         if (collection.isEmpty()) return false
         val extendedCollection = wrapToExtended(collection)
+        val currentlyVisible = filteredItems
         items.addAll(extendedCollection)
         val filtered = extendedCollection.filter { return@filter it.isVisible }
         if (filtered.isEmpty()) return true
         adapter.apply {
-            val currentlyVisible = filteredItems
             val recyclerView = adapter.recyclerView
             val headersCount = adapter.headersCount
             val needToUpdatePreviousLastItem = currentlyVisible.isNotEmpty() && recyclerView!!.itemDecorationCount > 0

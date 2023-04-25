@@ -50,8 +50,10 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         val previousLastPosition = items.size + headersCount - 1
         items.add(item)
         adapter.apply {
-            if (needToUpdatePreviousLastItem)
-                notifyItemChanged(previousLastPosition, false) // update last item decoration without animation
+            if (needToUpdatePreviousLastItem) notifyItemChanged(
+                previousLastPosition,
+                false
+            ) // update last item decoration without animation
             notifyItemInserted(items.size + headersCount - 1)
         }
         return true
@@ -61,15 +63,16 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         if (collection.isEmpty()) return false
         val recyclerView = adapter.recyclerView
         val headersCount = adapter.headersCount
+        val previousLastItem = items.size + headersCount - 1
         val needToUpdatePreviousLastItem = items.size > 0 && recyclerView!!.itemDecorationCount > 0
         val positionStart = items.size + 1
         val newItemsCount = collection.size
         items.addAll(collection)
         adapter.apply {
-            if (needToUpdatePreviousLastItem) {
-                val previousLastItem = items.size + headersCount - 1
-                notifyItemChanged(previousLastItem, false)
-            }// update last item decoration without animation
+            if (needToUpdatePreviousLastItem) notifyItemChanged(
+                previousLastItem,
+                false
+            )// update last item decoration without animation
             notifyItemRangeInserted(positionStart + headersCount, newItemsCount + headersCount)
         }
         return true
