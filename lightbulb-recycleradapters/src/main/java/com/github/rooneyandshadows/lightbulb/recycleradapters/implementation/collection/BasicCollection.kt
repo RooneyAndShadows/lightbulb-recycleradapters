@@ -46,15 +46,14 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
     override fun addInternally(item: ItemType): Boolean {
         val recyclerView = adapter.recyclerView
         val headersCount = adapter.headersCount
-        val needToUpdatePreviousLastItem = items.size > 0 && recyclerView!!.itemDecorationCount > 0
         val previousLastPosition = items.size + headersCount - 1
         items.add(item)
         adapter.apply {
-            if (needToUpdatePreviousLastItem) notifyItemChanged(
-                previousLastPosition,
-                false
-            ) // update last item decoration without animation
             notifyItemInserted(items.size + headersCount - 1)
+            val hasItemDecorations = (recyclerView?.itemDecorationCount ?: 0) > 0
+            val needToUpdatePreviousLastItem = previousLastPosition >= 0 && hasItemDecorations
+            // update last item decoration without animation
+            if (needToUpdatePreviousLastItem) notifyItemChanged(previousLastPosition, false)
         }
         return true
     }
@@ -63,17 +62,16 @@ class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor
         if (collection.isEmpty()) return false
         val recyclerView = adapter.recyclerView
         val headersCount = adapter.headersCount
-        val previousLastItem = items.size + headersCount - 1
-        val needToUpdatePreviousLastItem = items.size > 0 && recyclerView!!.itemDecorationCount > 0
-        val positionStart = items.size + 1
+        val positionStart = items.size + headersCount
         val newItemsCount = collection.size
         items.addAll(collection)
         adapter.apply {
-            if (needToUpdatePreviousLastItem) notifyItemChanged(
-                previousLastItem,
-                false
-            )// update last item decoration without animation
-            notifyItemRangeInserted(positionStart + headersCount, newItemsCount + headersCount)
+            notifyItemRangeInserted(positionStart, newItemsCount)
+            val hasItemDecorations = (recyclerView?.itemDecorationCount ?: 0) > 0
+            val previousLastItem = positionStart - 1
+            val needToUpdatePreviousLastItem = previousLastItem >= 0 && hasItemDecorations
+            // update last item decoration without animation
+            if (needToUpdatePreviousLastItem) notifyItemChanged(previousLastItem, false)
         }
         return true
     }

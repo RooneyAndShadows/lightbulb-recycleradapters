@@ -23,6 +23,7 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
         setHasStableIds(dataAdapter.hasStableIds())
     }
 
+    @Override
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (isHeaderViewType(viewType)) {
             val headerIndex = abs(viewType - BASE_HEADER_VIEW_TYPE)
@@ -37,12 +38,25 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
         }
     }
 
+    @Override
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (position < headersCount || position >= headersCount + adapter!!.itemCount)
             return
         adapter!!.onBindViewHolder(holder, position - headersCount)
     }
 
+    @Override
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads)
+            return
+        }
+        if (position < headersCount || position >= headersCount + adapter!!.itemCount)
+            return
+        adapter!!.onBindViewHolder(holder, position - headersCount, payloads)
+    }
+
+    @Override
     override fun onViewRecycled(viewHolder: RecyclerView.ViewHolder) {
         val vtype = viewHolder.itemViewType
         if (isHeaderPosition(vtype) || isFooterPosition(vtype)) {
@@ -52,6 +66,7 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
         }
     }
 
+    @Override
     override fun getItemViewType(position: Int): Int {
         return if (isHeaderPosition(position)) {
             mHeaderViewInfoList[position].viewType
@@ -62,30 +77,36 @@ class HeaderViewRecyclerAdapter @JvmOverloads constructor(
         }
     }
 
+    @Override
     override fun getItemCount(): Int {
         return footersCount + headersCount + adapter!!.itemCount
     }
 
+    @Override
     override fun getItemId(position: Int): Long {
         return if (isFooterPosition(position) || isHeaderPosition(position)) position.toLong()
         else adapter!!.getItemId(position)
     }
 
+    @Override
     override fun registerAdapterDataObserver(observer: RecyclerView.AdapterDataObserver) {
         super.registerAdapterDataObserver(observer)
         adapter!!.registerAdapterDataObserver(observer)
     }
 
+    @Override
     override fun unregisterAdapterDataObserver(observer: RecyclerView.AdapterDataObserver) {
         super.unregisterAdapterDataObserver(observer)
         adapter!!.unregisterAdapterDataObserver(observer)
     }
 
+    @Override
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
         adapter!!.onAttachedToRecyclerView(recyclerView)
     }
 
+    @Override
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
         adapter!!.onDetachedFromRecyclerView(recyclerView)
