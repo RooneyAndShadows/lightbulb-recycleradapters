@@ -16,7 +16,7 @@ import java.util.function.Predicate
 import java.util.stream.Collectors
 
 @Suppress("unused")
-class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
+open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
     adapter: EasyRecyclerAdapter<ItemType>,
     private val itemsComparator: ItemsComparator<ItemType>? = null,
 ) : EasyRecyclerAdapterCollection<ItemType>(adapter) {
