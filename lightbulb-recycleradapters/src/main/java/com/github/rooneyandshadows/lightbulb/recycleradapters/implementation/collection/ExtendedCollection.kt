@@ -105,7 +105,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         notifyChange: Boolean = true,
     ) {
         if (selectableMode == SELECT_NONE) return
-        if (selectableMode == SELECT_SINGLE) clearSelectionInternally(true)
+        if (selectableMode == SELECT_SINGLE && newState) clearSelectionInternally(true)
         val selectionChanged = selectInternally(targetPosition, newState, notifyChange)
         if (selectionChanged) dispatchSelectionChangeEvent()
     }
@@ -499,6 +499,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         items.forEachIndexed { position, item ->
             val isSelected = item.isSelected
             if (!isSelected) return@forEachIndexed
+            item.isSelected = false
             adapter.apply {
                 if (notifyForSelectionChange && item.isVisible) {
                     val positionToNotify = position + headersCount
