@@ -206,7 +206,10 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
     override fun getPositionStrings(positions: IntArray): String {
         return items.filterIndexed { index, _ ->
             return@filterIndexed positions.contains(index)
-        }.joinToString(", ")
+        }.joinToString(
+            transform = { item -> item.itemName },
+            separator = ", "
+        )
     }
 
     override fun saveState(): Bundle {

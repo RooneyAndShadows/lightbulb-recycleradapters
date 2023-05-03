@@ -49,7 +49,10 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     val filteredPositionsAsArray: IntArray
         get() = filteredPositions.toIntArray()
     val selectionString: String
-        get() = selectedItems.joinToString(transform = { item -> item.itemName }, separator = ", ")
+        get() = selectedItems.joinToString(
+            transform = { item -> item.itemName },
+            separator = ", "
+        )
     var currentFilterQuery: String = ""
         private set
 
@@ -460,7 +463,10 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     override fun getPositionStrings(positions: IntArray): String {
         return items.filterIndexed { index, _ ->
             return@filterIndexed positions.contains(index)
-        }.joinToString(", ")
+        }.joinToString(
+            transform = { item -> item.item.itemName },
+            separator = ", "
+        )
     }
 
     override fun saveState(): Bundle {
