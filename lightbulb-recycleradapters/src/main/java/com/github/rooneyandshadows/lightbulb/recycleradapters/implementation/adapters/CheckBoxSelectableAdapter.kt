@@ -11,6 +11,7 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRe
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection.SelectableModes.SELECT_MULTIPLE
 import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView
+import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView.OnCheckedChangeListener
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
 open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>() {
@@ -70,6 +71,14 @@ open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecy
 
     inner class CheckBoxViewHolder internal constructor(checkBoxView: CheckBoxView) : ViewHolder(checkBoxView) {
         private var selectableView: CheckBoxView = itemView as CheckBoxView
+        private val onCheckedListener = OnCheckedChangeListener { cbv, isChecked ->
+            cbv?.apply {
+                post {
+                    val position = bindingAdapterPosition - headersCount
+                    collection.selectItemAt(position, isChecked)
+                }
+            }
+        }
 
         fun bindItem() {
             selectableView.apply {
@@ -81,20 +90,14 @@ open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecy
                 if (isChecked != isSelectedInAdapter) isChecked = isSelectedInAdapter
                 text = itemText
                 setIcon(itemIcon, itemIconBackground)
+                setOnCheckedListener(onCheckedListener)
             }
         }
 
         fun recycle() {
-            selectableView.setIcon(null, null)
-        }
-
-        init {
-            with(selectableView) {
-                setOnCheckedListener { _: CheckBoxView?, isChecked: Boolean ->
-                    post {
-                        collection.selectItemAt(bindingAdapterPosition, isChecked)
-                    }
-                }
+            selectableView.apply {
+                setIcon(null, null)
+                setOnCheckedListener(null)
             }
         }
     }

@@ -198,6 +198,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
             @Override
             override fun performFiltering(charSequence: CharSequence): FilterResults {
                 currentFilterQuery = charSequence.toString()
+                println("filter")
                 val result: MutableList<Int> = mutableListOf()
                 if (currentFilterQuery.isBlank()) {
                     result.addAll(items.indices)
@@ -234,21 +235,10 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
                     }
 
                     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                        return true
+                        return oldItemPosition == newItemPosition
                     }
                 }, true)
                 diff.dispatchUpdatesTo(UpdateCallback(adapter, adapter.headersCount))
-                /*val toRemove = oldPositions.filter { return@filter !newPositions.contains(it) }.toMutableList()
-                val toAdd = newPositions.filter { return@filter !oldPositions.contains(it) }
-                toRemove.forEach { position ->
-                    val posToRemove = oldPositions.indexOf(position)
-                    oldPositions.removeAt(posToRemove)
-                    notifyItemRemoved(posToRemove)
-                }
-                toAdd.forEach {
-                    val posToAdd = newPositions.indexOf(it)
-                    notifyItemInserted(posToAdd)
-                }*/
             }
         }
     }
