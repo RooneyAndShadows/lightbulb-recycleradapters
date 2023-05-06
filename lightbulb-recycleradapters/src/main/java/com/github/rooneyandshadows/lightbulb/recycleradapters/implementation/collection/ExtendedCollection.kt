@@ -471,7 +471,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
 
     override fun saveState(): Bundle {
         return Bundle().apply {
-            BundleUtils.putParcelableList(ADAPTER_ITEMS, this, items)
+            BundleUtils.putParcelableArrayList(ADAPTER_ITEMS, this, ArrayList(items))
             BundleUtils.putInt(ADAPTER_SELECTION_MODE, this, selectableMode.value)
             onSaveInstanceState(this)
         }
@@ -483,10 +483,9 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         selectableMode = SelectableModes.valueOf(savedState.getInt(ADAPTER_SELECTION_MODE))
         items.apply {
             val clz = Class.forName(ExtendedItem::class.java.name) as Class<ExtendedItem<ItemType>>
-            BundleUtils.getParcelableList(ADAPTER_ITEMS, savedState, clz)?.apply {
-                clear()
-                addAll(this)
-            }
+            val saved = BundleUtils.getParcelableArrayList(ADAPTER_ITEMS, savedState, clz)
+            clear()
+            if (saved != null) addAll(saved)
         }
         adapter.notifyDataSetChanged()
     }

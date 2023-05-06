@@ -214,7 +214,7 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
 
     override fun saveState(): Bundle {
         return Bundle().apply {
-            BundleUtils.putParcelableList(ADAPTER_ITEMS, this, wrapToBasic(items))
+            BundleUtils.putParcelableArrayList(ADAPTER_ITEMS, this, wrapToBasic(items))
             onSaveInstanceState(this)
         }
     }
@@ -224,13 +224,12 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
     override fun restoreState(savedState: Bundle) {
         items.apply {
             val clz = Class.forName(BasicItem::class.java.name) as Class<BasicItem<ItemType>>
-            BundleUtils.getParcelableList(ADAPTER_ITEMS, savedState, clz)?.apply {
-                val rawItems = map { return@map it.item }
-                clear()
-                addAll(rawItems)
-            }
-            adapter.notifyDataSetChanged()
+            val saved = BundleUtils.getParcelableArrayList(ADAPTER_ITEMS, savedState, clz)
+            val rawItems = saved?.map { return@map it.item }
+            clear()
+            if (rawItems != null) addAll(rawItems)
         }
+        adapter.notifyDataSetChanged()
         onRestoreInstanceState(savedState)
     }
 
@@ -238,8 +237,8 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
         return BasicItem(target)
     }
 
-    private fun wrapToBasic(target: List<ItemType>): List<BasicItem<ItemType>> {
-        return target.map { return@map wrapToBasic(it) }.toMutableList()
+    private fun wrapToBasic(target: List<ItemType>): ArrayList<BasicItem<ItemType>> {
+        return target.map { return@map wrapToBasic(it) }.toCollection(ArrayList())
     }
 
     private class DiffUtilCallback<T : EasyAdapterDataModel>(
