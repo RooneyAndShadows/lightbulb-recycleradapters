@@ -198,7 +198,6 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
             @Override
             override fun performFiltering(charSequence: CharSequence): FilterResults {
                 currentFilterQuery = charSequence.toString()
-                println("filter")
                 val result: MutableList<Int> = mutableListOf()
                 if (currentFilterQuery.isBlank()) {
                     result.addAll(items.indices)
