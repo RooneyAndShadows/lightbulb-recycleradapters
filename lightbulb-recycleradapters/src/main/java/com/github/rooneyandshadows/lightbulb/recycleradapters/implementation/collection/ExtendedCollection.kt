@@ -59,6 +59,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     companion object {
         private const val ADAPTER_ITEMS = "ADAPTER_ITEMS"
         private const val ADAPTER_SELECTION_MODE = "ADAPTER_SELECTION_MODE"
+        private const val CURRENT_FILTER_QUERY = "CURRENT_FILTER_QUERY"
     }
 
     fun addOnSelectionChangeListener(listener: SelectionChangeListener) {
@@ -462,6 +463,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         return Bundle().apply {
             BundleUtils.putParcelableArrayList(ADAPTER_ITEMS, this, ArrayList(items))
             BundleUtils.putInt(ADAPTER_SELECTION_MODE, this, selectableMode.value)
+            BundleUtils.putString(CURRENT_FILTER_QUERY, this, currentFilterQuery)
             onSaveInstanceState(this)
         }
     }
@@ -470,13 +472,14 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     @Suppress("UNCHECKED_CAST")
     override fun restoreState(savedState: Bundle) {
         selectableMode = SelectableModes.valueOf(savedState.getInt(ADAPTER_SELECTION_MODE))
+        currentFilterQuery = BundleUtils.getString(CURRENT_FILTER_QUERY, savedState) ?: ""
         items.apply {
             val clz = Class.forName(ExtendedItem::class.java.name) as Class<ExtendedItem<ItemType>>
             val saved = BundleUtils.getParcelableArrayList(ADAPTER_ITEMS, savedState, clz)
             clear()
             if (saved != null) addAll(saved)
         }
-        adapter.notifyDataSetChanged()
+        filter.filter(currentFilterQuery)
     }
 
     private fun wrapToExtended(target: ItemType): ExtendedItem<ItemType> {
