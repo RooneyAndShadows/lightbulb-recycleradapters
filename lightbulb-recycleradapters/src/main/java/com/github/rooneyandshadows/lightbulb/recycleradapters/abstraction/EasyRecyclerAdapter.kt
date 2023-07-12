@@ -9,18 +9,20 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.E
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.adapters.HeaderViewRecyclerAdapter
 
 //TODO fix to use ConcatAdapter instead of wrapping with HeaderViewRecyclerAdapter
-@Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
+@Suppress("MemberVisibilityCanBePrivate", "unused")
 //@JvmSuppressWildcards
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>
     : Adapter<ViewHolder>() {
-    private val items: EasyRecyclerAdapterCollection<ItemType> by lazy { return@lazy createCollection() }
+    private val items: EasyRecyclerAdapterCollection<ItemType> by lazy {
+        return@lazy createCollection()
+    }
     var wrapperAdapter: HeaderViewRecyclerAdapter? = null
     var recyclerView: RecyclerView? = null
         private set
-    val headersCount: Int
-        get() = if (wrapperAdapter == null) 0 else wrapperAdapter!!.headersCount
-    val footersCount: Int
+    open val footersCount: Int
         get() = if (wrapperAdapter == null) 0 else wrapperAdapter!!.footersCount
+    open val headersCount: Int
+        get() = if (wrapperAdapter == null) 0 else wrapperAdapter!!.headersCount
     open val collection: EasyRecyclerAdapterCollection<ItemType>
         get() = items
 
