@@ -260,7 +260,7 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
         }
     }
 
-    interface CollectionChangeListener {
+    fun interface CollectionChangeListener {
         fun onChanged()
     }
 

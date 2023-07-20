@@ -10,7 +10,7 @@ android {
         targetSdkVersion 34
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-        versionName "2.0.4"
+        versionName "2.0.5"
     }
     buildFeatures {
         dataBinding true

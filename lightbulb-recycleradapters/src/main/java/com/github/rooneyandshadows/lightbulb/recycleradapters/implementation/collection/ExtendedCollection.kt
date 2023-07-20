@@ -273,7 +273,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
             val headersCount = adapter.headersCount
             notifyItemInserted(currentlyVisible.size + headersCount - 1)
             val hasItemDecorations = (recyclerView?.itemDecorationCount ?: 0) > 0
-            val previousLastItem = currentlyVisible.size + headersCount - 1
+            val previousLastItem = currentlyVisible.size + headersCount - 2
             val needToUpdatePreviousLastItem = previousLastItem >= 0 && hasItemDecorations
             // update last item decoration without animation
             if (needToUpdatePreviousLastItem) notifyItemChanged(previousLastItem, false)
@@ -291,7 +291,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         adapter.apply {
             val recyclerView = adapter.recyclerView
             val headersCount = adapter.headersCount
-            val positionStart = currentlyVisible.size + 1
+            val positionStart = currentlyVisible.size
             val newItemsCount = filtered.size
             notifyItemRangeInserted(positionStart + headersCount, newItemsCount + headersCount)
             val hasItemDecorations = (recyclerView?.itemDecorationCount ?: 0) > 0
