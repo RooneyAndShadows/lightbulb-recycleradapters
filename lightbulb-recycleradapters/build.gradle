@@ -10,7 +10,7 @@ android {
         targetSdkVersion 34
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-        versionName "2.0.5"
+        versionName "2.1.0"
     }
     buildFeatures {
         dataBinding true
@@ -49,6 +49,9 @@ afterEvaluate {
                 groupId "$environment.group_id"
                 version android.defaultConfig.versionName
                 artifactId project.name
+                artifact sourceJar {
+                    classifier "sources"
+                }
             }
         }
     }

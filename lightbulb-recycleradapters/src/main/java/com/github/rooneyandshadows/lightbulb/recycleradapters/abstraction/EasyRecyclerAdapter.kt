@@ -16,7 +16,7 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>
     private val items: EasyRecyclerAdapterCollection<ItemType> by lazy {
         return@lazy createCollection()
     }
-    var wrapperAdapter: HeaderViewRecyclerAdapter? = null
+    private var wrapperAdapter: HeaderViewRecyclerAdapter<ItemType>? = null
     var recyclerView: RecyclerView? = null
         private set
     open val footersCount: Int
@@ -74,5 +74,9 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>
             }
             onRestoreInstanceState(savedState)
         }
+    }
+
+    internal fun wrap(headerAndFooterAdapter: HeaderViewRecyclerAdapter<ItemType>) {
+        wrapperAdapter = headerAndFooterAdapter
     }
 }
