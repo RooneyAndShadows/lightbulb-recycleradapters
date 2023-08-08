@@ -305,11 +305,12 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
 
     override fun removeInternally(targetPosition: Int): Boolean {
         if (!positionExists(targetPosition)) return false
-        val item = items[targetPosition]
+        val itemToRemove = items[targetPosition]
         val selectionChanged = selectInternally(targetPosition, newState = false, notifyForSelectionChange = false)
+        val visibleItems = filteredItems
         items.removeAt(targetPosition)
-        if (item.isVisible) adapter.apply {
-            val posToRemove = filteredItems.indexOf(item.item)
+        if (itemToRemove.isVisible) adapter.apply {
+            val posToRemove = visibleItems.indexOf(itemToRemove.item)
             notifyItemRemoved(posToRemove + headersCount)
         }
         if (selectionChanged) dispatchSelectionChangeEvent()
@@ -320,10 +321,10 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         val positions = getPositions(targets).sortedDescending()
         if (positions.isEmpty()) return false
         val selectionChanged = isAtLeastOneSelected(positions)
+        val visibleItems = filteredItems
         val removedItems = items.removeIf { return@removeIf targets.contains(it.item) }
         if (!removedItems) return false
         adapter.apply {
-            val visibleItems = filteredItems
             val positionsToRemove = mutableListOf<Int>()
             positions.forEach {
                 val itemToRemove = items[it]
@@ -351,10 +352,11 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     override fun clearInternally(): Boolean {
         if (items.isEmpty()) return false
         val selectionChanged = clearSelectionInternally(false)
+        val visibleItems = filteredItems
         items.clear()
         adapter.apply {
             val notifyRangeStart = 0
-            val notifyRangeEnd = filteredItems.size - 1
+            val notifyRangeEnd = visibleItems.size - 1
             notifyItemRangeRemoved(notifyRangeStart + headersCount, notifyRangeEnd + headersCount)
         }
         if (selectionChanged) dispatchSelectionChangeEvent()
