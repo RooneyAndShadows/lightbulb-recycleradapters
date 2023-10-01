@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.EasyRecyclerAdapterCollection
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.adapters.HeaderViewRecyclerAdapter
+import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.BasicCollection
 
 //TODO fix to use ConcatAdapter instead of wrapping with HeaderViewRecyclerAdapter
 @Suppress("MemberVisibilityCanBePrivate", "unused")
@@ -26,7 +27,15 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>
     open val collection: EasyRecyclerAdapterCollection<ItemType>
         get() = items
 
-    abstract fun createCollection(): EasyRecyclerAdapterCollection<ItemType>
+
+    /**
+     * Used to create the collection that the adapter will use.
+     *
+     * @param outState state to save
+     */
+    protected open fun createCollection(): EasyRecyclerAdapterCollection<ItemType> {
+        return BasicCollection(this)
+    }
 
     /**
      * Used to add values to out state of the adapter during save state.

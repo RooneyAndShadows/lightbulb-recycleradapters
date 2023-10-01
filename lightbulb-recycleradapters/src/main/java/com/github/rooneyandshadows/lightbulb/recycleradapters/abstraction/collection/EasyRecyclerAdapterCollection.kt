@@ -27,7 +27,9 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
     }
 
     fun addOnCollectionChangedListener(listener: CollectionChangeListener) {
-        if (onCollectionChangedListeners.contains(listener)) return
+        if (onCollectionChangedListeners.contains(listener)) {
+            return
+        }
         onCollectionChangedListeners.add(listener)
     }
 

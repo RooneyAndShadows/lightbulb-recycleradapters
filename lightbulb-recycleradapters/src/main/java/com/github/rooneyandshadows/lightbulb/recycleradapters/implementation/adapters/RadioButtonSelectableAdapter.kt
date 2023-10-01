@@ -13,7 +13,7 @@ import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.col
 import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView
 import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView.OnCheckedChangeListener
 
-@Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
     : EasyRecyclerAdapter<ItemType>() {
 
