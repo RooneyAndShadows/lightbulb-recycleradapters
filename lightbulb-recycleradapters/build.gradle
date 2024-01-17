@@ -8,7 +8,7 @@ android {
     defaultConfig {
         minSdkVersion 24
         targetSdkVersion 34
-        versionName "2.2.0"
+        versionName "2.3.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -20,6 +20,12 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/io.netty.versions.properties'
+        exclude 'META-INF/INDEX.LIST'
+        merge 'META-INF/gradle/incremental.annotation.processors'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
