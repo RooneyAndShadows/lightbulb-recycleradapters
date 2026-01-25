@@ -1,0 +1,28 @@
+[versions]
+agp = "8.13.2"
+kotlin = "2.3.0"
+coreKtx = "1.17.0"
+appcompat = "1.6.1"
+lifecycle = "2.6.2"
+recyclerview = "1.3.1"
+lbCommons = "[1.3.0,1.4.0["
+lbSelectableView = "[1.0.3,1.1.0["
+javaCommons = "[1.0.7,1.1.0["
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+
+lightbulb-commons = { group = "com.github.rooneyandshadows", name = "lightbulb-commons", version.ref = "lbCommons" }
+lightbulb-selectableview = { group = "com.github.rooneyandshadows", name = "lightbulb-selectableview", version.ref = "lbSelectableView" }
+
+java-commons = { group = "com.github.rooneyandshadows", name = "java-commons", version.ref = "javaCommons" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+maven-publish = { id = "maven-publish" }

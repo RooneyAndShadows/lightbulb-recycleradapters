@@ -1,13 +1,16 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'maven-publish'
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    id("org.jetbrains.kotlin.kapt")
+    id("maven-publish")
+}
 
 android {
-    compileSdkVersion 34
+    namespace 'com.github.rooneyandshadows.lightbulb.recycleradapters'
+    compileSdkVersion 36
     defaultConfig {
         minSdkVersion 24
-        targetSdkVersion 34
+        targetSdkVersion 36
         versionName "2.4.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -27,20 +30,30 @@ android {
         exclude 'META-INF/INDEX.LIST'
         merge 'META-INF/gradle/incremental.annotation.processors'
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    namespace 'com.github.rooneyandshadows.lightbulb.recycleradapters'
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
+
 }
 
-tasks.withType(JavaCompile) {
-    options.compilerArgs << "-Xlint:unchecked"
-    options.deprecation = true
-}
-task androidSourcesJar(type: Jar) {
-    archiveClassifier.set('sources')
-    from android.sourceSets.main.java.srcDirs
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.core.ktx)
+
+    implementation(libs.java.commons)
+    implementation(libs.lightbulb.commons)
+    implementation(libs.lightbulb.selectableview)
 }
 
 afterEvaluate {
@@ -54,19 +67,7 @@ afterEvaluate {
                 groupId "$environment.group_id"
                 version android.defaultConfig.versionName
                 artifactId project.name
-                artifact androidSourcesJar
             }
         }
     }
-}
-
-dependencies {
-    implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation "androidx.appcompat:appcompat:$versions.android_appcompat"
-    implementation "androidx.recyclerview:recyclerview:$versions.android_recyclerview"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$versions.android_lifecycle"
-    implementation "com.github.rooneyandshadows:java-commons:$versions.java.commons"
-    implementation "com.github.rooneyandshadows:lightbulb-commons:$versions.lightbulb.commons"
-    implementation "com.github.rooneyandshadows:lightbulb-selectableview:$versions.lightbulb.selectableview"
-    implementation "androidx.core:core-ktx:$versions.ktx.core"
 }
