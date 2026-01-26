@@ -26,6 +26,9 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
 ) : EasyRecyclerAdapterCollection<ItemType>(adapter), Filterable {
     private val selectionChangeListeners: MutableList<SelectionChangeListener> = mutableListOf()
     private val items: MutableList<ExtendedItem<ItemType>> = mutableListOf()
+    private val internalFilter: Filter by lazy {
+        return@lazy createFilter()
+    }
     val hasSelection: Boolean
         get() = items.any { return@any it.isSelected }
     val selectedItems: List<ItemType>
@@ -91,7 +94,8 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         if (selectableMode == SELECT_NONE) return
         var selectionChanged = false
         for (positionToSelect in items.indices)
-            selectionChanged = selectionChanged || selectInternally(positionToSelect, newState, true)
+            selectionChanged =
+                selectionChanged || selectInternally(positionToSelect, newState, true)
         if (selectionChanged) dispatchSelectionChangeEvent()
     }
 
@@ -156,7 +160,8 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
             val targetPosition = targetPositions[0]
             if (!positionExists(targetPosition) || newState == isItemSelected(targetPosition)) return
             clearSelectionInternally(true)
-            val selectionChanged = selectInternally(targetPosition, newState, notifyForSelectionChange = true)
+            val selectionChanged =
+                selectInternally(targetPosition, newState, notifyForSelectionChange = true)
             if (selectionChanged) dispatchSelectionChangeEvent()
         }
         if (selectableMode == SELECT_MULTIPLE) {
@@ -195,52 +200,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
 
     @Override
     final override fun getFilter(): Filter {
-        return object : Filter() {
-            @Override
-            override fun performFiltering(charSequence: CharSequence): FilterResults {
-                currentFilterQuery = charSequence.toString()
-                val result: MutableList<Int> = mutableListOf()
-                if (currentFilterQuery.isBlank()) {
-                    result.addAll(items.indices)
-                } else {
-                    items.forEachIndexed { index, extendedItem ->
-                        if (filterItem(extendedItem.item, currentFilterQuery))
-                            result.add(index)
-                    }
-                }
-                val filterResults = FilterResults()
-                filterResults.values = result
-                return filterResults
-            }
-
-            @Suppress("UNCHECKED_CAST")
-            @SuppressLint("NotifyDataSetChanged")
-            override fun publishResults(charSequence: CharSequence, filterResults: FilterResults) {
-                val newPositions = (filterResults.values as List<Int>).toMutableList()
-                val oldPositions = filteredPositions
-                items.forEachIndexed { position, extendedItem ->
-                    extendedItem.isVisible = newPositions.contains(position)
-                }
-                val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                    override fun getOldListSize(): Int {
-                        return oldPositions.size
-                    }
-
-                    override fun getNewListSize(): Int {
-                        return newPositions.size
-                    }
-
-                    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                        return oldPositions[oldItemPosition] == newPositions[newItemPosition]
-                    }
-
-                    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                        return oldItemPosition == newItemPosition
-                    }
-                }, true)
-                diff.dispatchUpdatesTo(UpdateCallback(adapter, adapter.headersCount))
-            }
-        }
+        return internalFilter
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -306,7 +266,8 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     override fun removeInternally(targetPosition: Int): Boolean {
         if (!positionExists(targetPosition)) return false
         val itemToRemove = items[targetPosition]
-        val selectionChanged = selectInternally(targetPosition, newState = false, notifyForSelectionChange = false)
+        val selectionChanged =
+            selectInternally(targetPosition, newState = false, notifyForSelectionChange = false)
         val visibleItems = filteredItems
         items.removeAt(targetPosition)
         if (itemToRemove.isVisible) adapter.apply {
@@ -345,7 +306,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         items.removeAt(fromPosition)
         items.add(toPosition, movingItem)
         val needsNotify = movingItem.isVisible
-        if (needsNotify) filter.filter(currentFilterQuery)
+        if (needsNotify) internalFilter.filter(currentFilterQuery)
         return true
     }
 
@@ -481,7 +442,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
             clear()
             if (saved != null) addAll(saved)
         }
-        filter.filter(currentFilterQuery)
+        internalFilter.filter(currentFilterQuery)
     }
 
     private fun wrapToExtended(target: ItemType): ExtendedItem<ItemType> {
@@ -509,7 +470,11 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         return true
     }
 
-    private fun selectInternally(position: Int, newState: Boolean, notifyForSelectionChange: Boolean): Boolean {
+    private fun selectInternally(
+        position: Int,
+        newState: Boolean,
+        notifyForSelectionChange: Boolean
+    ): Boolean {
         if (!positionExists(position) || items[position].isSelected == newState) return false
         val item = items[position]
         item.isSelected = newState
@@ -543,6 +508,63 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         }
     }
 
+    private fun createFilter(): Filter {
+        return object : Filter() {
+            @Override
+            override fun performFiltering(charSequence: CharSequence): FilterResults {
+                currentFilterQuery = charSequence.toString()
+                val result: MutableList<Int> = mutableListOf()
+                if (currentFilterQuery.isBlank()) {
+                    result.addAll(items.indices)
+                } else {
+                    items.forEachIndexed { index, extendedItem ->
+                        if (filterItem(extendedItem.item, currentFilterQuery))
+                            result.add(index)
+                    }
+                }
+                val filterResults = FilterResults()
+                filterResults.values = result
+                return filterResults
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            @SuppressLint("NotifyDataSetChanged")
+            override fun publishResults(charSequence: CharSequence, filterResults: FilterResults) {
+                if (filterResults.values == null) return
+                val newPositions = (filterResults.values as List<Int>).toMutableList()
+                val oldPositions = filteredPositions
+                items.forEachIndexed { position, extendedItem ->
+                    extendedItem.isVisible = newPositions.contains(position)
+                }
+
+                val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                    override fun getOldListSize(): Int {
+                        return oldPositions.size
+                    }
+
+                    override fun getNewListSize(): Int {
+                        return newPositions.size
+                    }
+
+                    override fun areItemsTheSame(
+                        oldItemPosition: Int,
+                        newItemPosition: Int
+                    ): Boolean {
+                        return oldPositions[oldItemPosition] == newPositions[newItemPosition]
+                    }
+
+                    override fun areContentsTheSame(
+                        oldItemPosition: Int,
+                        newItemPosition: Int
+                    ): Boolean {
+                        return true
+                    }
+                }, true)
+                diff.dispatchUpdatesTo(UpdateCallback(adapter, adapter.headersCount))
+            }
+        }
+    }
+
     private class DiffUtilCallback<T : EasyAdapterDataModel>(
         private val oldData: List<ExtendedItem<T>>,
         private val newData: List<ExtendedItem<T>>,
@@ -557,7 +579,10 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         }
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return compareCallbacks.compareItems(oldData[oldItemPosition].item, newData[newItemPosition].item)
+            return compareCallbacks.compareItems(
+                oldData[oldItemPosition].item,
+                newData[newItemPosition].item
+            )
         }
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
@@ -588,7 +613,8 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
 
         override fun onMoved(fromPosition: Int, toPosition: Int) {
             val from = fromPosition + offset
-            adapter.notifyItemMoved(from, toPosition)
+            val to = toPosition + offset
+            adapter.notifyItemMoved(from, to)
         }
 
         override fun onChanged(position: Int, count: Int, payload: Any?) {
@@ -611,7 +637,11 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         @Suppress("UNCHECKED_CAST")
         constructor(parcel: Parcel) {
             val className = ParcelUtils.readString(parcel)!!
-            val clazz = Class.forName(className, false, ExtendedItem::class.java.classLoader) as Class<ItemType>
+            val clazz = Class.forName(
+                className,
+                false,
+                ExtendedItem::class.java.classLoader
+            ) as Class<ItemType>
             isSelected = ParcelUtils.readBoolean(parcel)!!
             isVisible = ParcelUtils.readBoolean(parcel)!!
             item = ParcelUtils.readParcelable(parcel, clazz) as ItemType
@@ -652,7 +682,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         }
 
         override fun onMoved(fromPosition: Int, toPosition: Int) {
-            adapter.notifyItemMoved(fromPosition + offset, toPosition)
+            adapter.notifyItemMoved(fromPosition + offset, toPosition + offset)
         }
 
         override fun onChanged(position: Int, count: Int, payload: Any?) {
