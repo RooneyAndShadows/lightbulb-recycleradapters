@@ -282,20 +282,13 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         val positions = getPositions(targets).sortedDescending()
         if (positions.isEmpty()) return false
         val selectionChanged = isAtLeastOneSelected(positions)
-        val visibleItems = filteredItems
+        val positionsToRemove = getFilteredPositions(targets)
         val removedItems = items.removeIf { return@removeIf targets.contains(it.item) }
         if (!removedItems) return false
-        adapter.apply {
-            val positionsToRemove = mutableListOf<Int>()
-            positions.forEach {
-                val itemToRemove = items[it]
-                val positionToRemove = visibleItems.indexOf(itemToRemove.item)
-                if (positionToRemove == -1) return@forEach
-                positionsToRemove.add(positionToRemove)
-            }
-            for (position in positionsToRemove)
-                notifyItemRemoved(position + headersCount)
-        }
+
+        for (position in positionsToRemove)
+            adapter.notifyItemRemoved(position + adapter.headersCount)
+
         if (selectionChanged) dispatchSelectionChangeEvent()
         return true
     }
@@ -443,6 +436,30 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
             if (saved != null) addAll(saved)
         }
         internalFilter.filter(currentFilterQuery)
+    }
+
+    fun getFilteredPositions(targets: List<ItemType>): IntArray {
+        if (targets.isEmpty()) return IntArray(0)
+        return mutableListOf<Int>().let { positions ->
+            val rawItems = filteredItems
+            targets.forEach {
+                val targetPos = rawItems.indexOf(it)
+                if (targetPos != -1) positions.add(targetPos)
+            }
+            return@let positions.toIntArray()
+        }
+    }
+
+    fun getFilteredPositions(targets: Array<ItemType>): IntArray {
+        if (targets.isEmpty()) return IntArray(0)
+        return mutableListOf<Int>().let { positions ->
+            val rawItems = filteredItems
+            targets.forEach {
+                val targetPos = rawItems.indexOf(it)
+                if (targetPos != -1) positions.add(targetPos)
+            }
+            return@let positions.toIntArray()
+        }
     }
 
     private fun wrapToExtended(target: ItemType): ExtendedItem<ItemType> {
