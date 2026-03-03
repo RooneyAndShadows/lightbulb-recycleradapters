@@ -279,10 +279,10 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
     }
 
     override fun removeAllInternally(targets: List<ItemType>): Boolean {
-        val positions = getPositions(targets).sortedDescending()
+        val positions = getPositions(targets)
         if (positions.isEmpty()) return false
         val selectionChanged = isAtLeastOneSelected(positions)
-        val positionsToRemove = getFilteredPositions(targets)
+        val positionsToRemove = getFilteredPositions(targets).sortedDescending()
         val removedItems = items.removeIf { return@removeIf targets.contains(it.item) }
         if (!removedItems) return false
 
@@ -504,7 +504,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         return true
     }
 
-    private fun isAtLeastOneSelected(positions: List<Int>): Boolean {
+    private fun isAtLeastOneSelected(positions: IntArray): Boolean {
         var hasSelectionInPositions = false
         for (positionToRemove in positions) {
             if (items[positionToRemove].isSelected) {
