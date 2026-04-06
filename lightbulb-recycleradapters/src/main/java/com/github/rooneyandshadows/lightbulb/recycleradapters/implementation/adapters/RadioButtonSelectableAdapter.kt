@@ -78,7 +78,7 @@ open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
         private val onCheckedListener = OnCheckedChangeListener { rbv, isChecked ->
             rbv?.apply {
                 post {
-                    val position = bindingAdapterPosition - headersCount
+                    val position = bindingAdapterPosition
                     collection.selectItemAt(position, isChecked)
                 }
             }

@@ -215,7 +215,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         items.addAll(selectableCollection)
         adapter.apply {
             if (diffResult != null) {
-                diffResult.dispatchUpdatesTo(AdapterUpdateCallback(this, headersCount))
+                diffResult.dispatchUpdatesTo(AdapterUpdateCallback(this))
                 recyclerView?.invalidateItemDecorations()
             } else notifyDataSetChanged()
         }
@@ -230,10 +230,9 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         adapter.apply {
             val currentlyVisible = filteredItems
             val recyclerView = adapter.recyclerView
-            val headersCount = adapter.headersCount
-            notifyItemInserted(currentlyVisible.size + headersCount - 1)
+            notifyItemInserted(currentlyVisible.size - 1)
             val hasItemDecorations = (recyclerView?.itemDecorationCount ?: 0) > 0
-            val previousLastItem = currentlyVisible.size + headersCount - 2
+            val previousLastItem = currentlyVisible.size - 2
             val needToUpdatePreviousLastItem = previousLastItem >= 0 && hasItemDecorations
             // update last item decoration without animation
             if (needToUpdatePreviousLastItem) notifyItemChanged(previousLastItem, false)
@@ -250,12 +249,11 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         if (filtered.isEmpty()) return true
         adapter.apply {
             val recyclerView = adapter.recyclerView
-            val headersCount = adapter.headersCount
             val positionStart = currentlyVisible.size
             val newItemsCount = filtered.size
-            notifyItemRangeInserted(positionStart + headersCount, newItemsCount + headersCount)
+            notifyItemRangeInserted(positionStart, newItemsCount)
             val hasItemDecorations = (recyclerView?.itemDecorationCount ?: 0) > 0
-            val previousLastItem = currentlyVisible.size + headersCount - 1
+            val previousLastItem = currentlyVisible.size - 1
             val needToUpdatePreviousLastItem = previousLastItem >= 0 && hasItemDecorations
             // update last item decoration without animation
             if (needToUpdatePreviousLastItem) notifyItemChanged(previousLastItem, false)
@@ -272,7 +270,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         items.removeAt(targetPosition)
         if (itemToRemove.isVisible) adapter.apply {
             val posToRemove = visibleItems.indexOf(itemToRemove.item)
-            notifyItemRemoved(posToRemove + headersCount)
+            notifyItemRemoved(posToRemove)
         }
         if (selectionChanged) dispatchSelectionChangeEvent()
         return true
@@ -287,7 +285,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         if (!removedItems) return false
 
         for (position in positionsToRemove)
-            adapter.notifyItemRemoved(position + adapter.headersCount)
+            adapter.notifyItemRemoved(position)
 
         if (selectionChanged) dispatchSelectionChangeEvent()
         return true
@@ -311,7 +309,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         adapter.apply {
             val notifyRangeStart = 0
             val notifyRangeEnd = visibleItems.size - 1
-            notifyItemRangeRemoved(notifyRangeStart + headersCount, notifyRangeEnd + headersCount)
+            notifyItemRangeRemoved(notifyRangeStart, notifyRangeEnd)
         }
         if (selectionChanged) dispatchSelectionChangeEvent()
         return true
@@ -479,7 +477,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
             item.isSelected = false
             adapter.apply {
                 if (notifyForSelectionChange && item.isVisible) {
-                    val positionToNotify = position + headersCount
+                    val positionToNotify = position
                     adapter.notifyItemChanged(positionToNotify, false)
                 }
             }
@@ -497,7 +495,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
         item.isSelected = newState
         if (notifyForSelectionChange && item.isVisible) {
             adapter.apply {
-                val positionToNotify = position + headersCount
+                val positionToNotify = position
                 notifyItemChanged(positionToNotify, false)
             }
         }
@@ -577,7 +575,7 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
                         return true
                     }
                 }, true)
-                diff.dispatchUpdatesTo(UpdateCallback(adapter, adapter.headersCount))
+                diff.dispatchUpdatesTo(UpdateCallback(adapter))
             }
         }
     }
@@ -616,27 +614,21 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
 
     private class AdapterUpdateCallback(
         private val adapter: RecyclerView.Adapter<*>,
-        private val offset: Int,
     ) : ListUpdateCallback {
         override fun onInserted(position: Int, count: Int) {
-            val start = position + offset
-            adapter.notifyItemRangeInserted(start, count)
+            adapter.notifyItemRangeInserted(position, count)
         }
 
         override fun onRemoved(position: Int, count: Int) {
-            val start = position + offset
-            adapter.notifyItemRangeRemoved(start, count)
+            adapter.notifyItemRangeRemoved(position, count)
         }
 
         override fun onMoved(fromPosition: Int, toPosition: Int) {
-            val from = fromPosition + offset
-            val to = toPosition + offset
-            adapter.notifyItemMoved(from, to)
+            adapter.notifyItemMoved(fromPosition, toPosition)
         }
 
         override fun onChanged(position: Int, count: Int, payload: Any?) {
-            val start = position + offset
-            adapter.notifyItemRangeChanged(start, count, payload)
+            adapter.notifyItemRangeChanged(position, count, payload)
         }
     }
 
@@ -688,22 +680,21 @@ open class ExtendedCollection<ItemType : EasyAdapterDataModel> @JvmOverloads con
 
     private class UpdateCallback(
         private val adapter: RecyclerView.Adapter<*>,
-        private val offset: Int,
     ) : ListUpdateCallback {
         override fun onInserted(position: Int, count: Int) {
-            adapter.notifyItemRangeInserted(position + offset, count)
+            adapter.notifyItemRangeInserted(position, count)
         }
 
         override fun onRemoved(position: Int, count: Int) {
-            adapter.notifyItemRangeRemoved(position + offset, count)
+            adapter.notifyItemRangeRemoved(position, count)
         }
 
         override fun onMoved(fromPosition: Int, toPosition: Int) {
-            adapter.notifyItemMoved(fromPosition + offset, toPosition + offset)
+            adapter.notifyItemMoved(fromPosition, toPosition)
         }
 
         override fun onChanged(position: Int, count: Int, payload: Any?) {
-            adapter.notifyItemRangeChanged(position + offset, count)
+            adapter.notifyItemRangeChanged(position, count)
         }
     }
 

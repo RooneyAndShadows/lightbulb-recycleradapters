@@ -36,7 +36,7 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
         items.addAll(collection)
         adapter.apply {
             if (diffResult != null) {
-                diffResult.dispatchUpdatesTo(AdapterUpdateCallback(this, headersCount))
+                diffResult.dispatchUpdatesTo(AdapterUpdateCallback(this))
                 recyclerView?.invalidateItemDecorations()
             } else notifyDataSetChanged()
         }
@@ -45,11 +45,10 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
 
     override fun addInternally(item: ItemType): Boolean {
         val recyclerView = adapter.recyclerView
-        val headersCount = adapter.headersCount
-        val previousLastPosition = items.size + headersCount - 1
+        val previousLastPosition = items.size - 1
         items.add(item)
         adapter.apply {
-            notifyItemInserted(items.size + headersCount - 1)
+            notifyItemInserted(items.size - 1)
             val hasItemDecorations = (recyclerView?.itemDecorationCount ?: 0) > 0
             val needToUpdatePreviousLastItem = previousLastPosition >= 0 && hasItemDecorations
             // update last item decoration without animation
@@ -61,8 +60,7 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
     override fun addAllInternally(collection: List<ItemType>): Boolean {
         if (collection.isEmpty()) return false
         val recyclerView = adapter.recyclerView
-        val headersCount = adapter.headersCount
-        val positionStart = items.size + headersCount
+        val positionStart = items.size
         val newItemsCount = collection.size
         items.addAll(collection)
         adapter.apply {
@@ -80,7 +78,7 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
         if (!positionExists(targetPosition)) return false
         items.removeAt(targetPosition)
         adapter.apply {
-            notifyItemRemoved(targetPosition + headersCount)
+            notifyItemRemoved(targetPosition)
         }
         return true
     }
@@ -91,7 +89,7 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
         items.removeIf { return@removeIf targets.contains(it) }
         adapter.apply {
             for (position in positionsToRemove)
-                notifyItemRemoved(position + headersCount)
+                notifyItemRemoved(position)
         }
         return true
     }
@@ -102,7 +100,7 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
         items.removeAt(fromPosition)
         items.add(toPosition, movingItem)
         adapter.apply {
-            notifyItemMoved(fromPosition + headersCount, toPosition + headersCount)
+            notifyItemMoved(fromPosition, toPosition)
         }
         return true
     }
@@ -113,7 +111,7 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
         val notifyRangeEnd = items.size - 1
         items.clear()
         adapter.apply {
-            notifyItemRangeRemoved(notifyRangeStart + headersCount, notifyRangeEnd + headersCount)
+            notifyItemRangeRemoved(notifyRangeStart, notifyRangeEnd)
         }
         return true
     }
@@ -266,27 +264,22 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
     }
 
     private class AdapterUpdateCallback(
-        private val adapter: RecyclerView.Adapter<*>,
-        private val offset: Int,
+        private val adapter: RecyclerView.Adapter<*>
     ) : ListUpdateCallback {
         override fun onInserted(position: Int, count: Int) {
-            val start = position + offset
-            adapter.notifyItemRangeInserted(start, count)
+            adapter.notifyItemRangeInserted(position, count)
         }
 
         override fun onRemoved(position: Int, count: Int) {
-            val start = position + offset
-            adapter.notifyItemRangeRemoved(start, count)
+            adapter.notifyItemRangeRemoved(position, count)
         }
 
         override fun onMoved(fromPosition: Int, toPosition: Int) {
-            val from = fromPosition + offset
-            adapter.notifyItemMoved(from, toPosition)
+            adapter.notifyItemMoved(fromPosition, toPosition)
         }
 
         override fun onChanged(position: Int, count: Int, payload: Any?) {
-            val start = position + offset
-            adapter.notifyItemRangeChanged(start, count, payload)
+            adapter.notifyItemRangeChanged(position, count, payload)
         }
     }
 
@@ -300,7 +293,11 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
         @Suppress("UNCHECKED_CAST")
         constructor(parcel: Parcel) {
             val className: String = parcel.readString()!!
-            val clazz = Class.forName(className, false, BasicItem::class.java.classLoader) as Class<ItemType>
+            val clazz = Class.forName(
+                className,
+                false,
+                BasicItem::class.java.classLoader
+            ) as Class<ItemType>
             item = ParcelUtils.readParcelable(parcel, clazz) as ItemType
         }
 

@@ -74,7 +74,7 @@ open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecy
         private val onCheckedListener = OnCheckedChangeListener { cbv, isChecked ->
             cbv?.apply {
                 post {
-                    val position = bindingAdapterPosition - headersCount
+                    val position = bindingAdapterPosition
                     collection.selectItemAt(position, isChecked)
                 }
             }

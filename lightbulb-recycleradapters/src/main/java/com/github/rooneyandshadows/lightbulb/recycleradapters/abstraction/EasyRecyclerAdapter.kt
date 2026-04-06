@@ -6,27 +6,18 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.EasyRecyclerAdapterCollection
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
-import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.adapters.HeaderViewRecyclerAdapter
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.BasicCollection
 
-//TODO fix to use ConcatAdapter instead of wrapping with HeaderViewRecyclerAdapter
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-//@JvmSuppressWildcards
-abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>
-    : Adapter<ViewHolder>() {
+abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> : Adapter<ViewHolder>() {
     private val items: EasyRecyclerAdapterCollection<ItemType> by lazy {
         return@lazy createCollection()
     }
-    private var wrapperAdapter: HeaderViewRecyclerAdapter<ItemType>? = null
     var recyclerView: RecyclerView? = null
         private set
-    open val footersCount: Int
-        get() = if (wrapperAdapter == null) 0 else wrapperAdapter!!.footersCount
-    open val headersCount: Int
-        get() = if (wrapperAdapter == null) 0 else wrapperAdapter!!.headersCount
+
     open val collection: EasyRecyclerAdapterCollection<ItemType>
         get() = items
-
 
     /**
      * Used to create the collection that the adapter will use.
@@ -83,9 +74,5 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel>
             }
             onRestoreInstanceState(savedState)
         }
-    }
-
-    internal fun wrap(headerAndFooterAdapter: HeaderViewRecyclerAdapter<ItemType>) {
-        wrapperAdapter = headerAndFooterAdapter
     }
 }
