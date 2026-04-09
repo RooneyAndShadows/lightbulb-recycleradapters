@@ -10,48 +10,44 @@ class StaticViewsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val views = mutableListOf<FixedViewInfo>()
     private var isStaggeredGrid = false
 
-    val headersCount: Int
-        get() = views.size
+    fun addView(
+        id: String,
+        viewFactory: (ViewGroup) -> View,
+        viewBinder: ((View, Int) -> Unit)? = null,
+        listeners: ViewListeners? = null
+    ) {
+        if (views.any { it.id == id }) return
 
-    override fun getItemCount(): Int = views.size
-
-    override fun getItemViewType(position: Int): Int {
-        return views[position].viewType
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val index = views.indexOfFirst { it.viewType == viewType }
-        val info = views[index]
-        return createViewHolder(info.view, info.viewListeners)
-    }
-
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        // nothing to bind (static views)
-    }
-
-    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
-        super.onViewRecycled(holder)
-    }
-
-    fun addView(view: View, listeners: ViewListeners? = null) {
+        val viewType = BASE_VIEW_TYPE + views.size
         val info = FixedViewInfo(
-            viewType = BASE_VIEW_TYPE + views.size,
-            view = view,
+            id = id,
+            viewType = viewType,
             localPosition = views.size,
+            viewFactory = viewFactory,
+            viewBinder = viewBinder,
             viewListeners = listeners
         )
         views.add(info)
         notifyItemInserted(views.lastIndex)
     }
 
-    fun removeView(view: View): Boolean {
-        val index = views.indexOfFirst { it.view === view }
-        if (index == -1) return false
-
+    fun removeViewById(id: String) {
+        val index = views.indexOfFirst { it.id == id }
+        if (index == -1) return
         views.removeAt(index)
         refreshPositions()
         notifyItemRemoved(index)
-        return true
+    }
+
+    fun updateViewById(id: String) {
+        val index = views.indexOfFirst { it.id == id }
+        if (index == -1) return
+
+        notifyItemChanged(index)
+    }
+
+    fun containsView(id: String): Boolean {
+        return views.any { it.id == id }
     }
 
     fun removeAllViews() {
@@ -62,15 +58,43 @@ class StaticViewsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         notifyItemRangeRemoved(0, count)
     }
 
-    fun containsView(view: View): Boolean {
-        return views.any { it.view === view }
+    override fun getItemCount(): Int = views.size
+
+    override fun getItemViewType(position: Int): Int {
+        return views[position].viewType
     }
 
-    fun setViewVisibility(visible: Boolean) {
-        views.forEach {
-            it.view.visibility = if (visible) View.VISIBLE else View.GONE
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val info = views.first { it.viewType == viewType }
+        val view = info.viewFactory(parent)
+
+        return createViewHolder(view, info.viewListeners)
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val info = views[position]
+
+        info.viewBinder?.invoke(holder.itemView, position)
+    }
+
+    private fun createViewHolder(view: View, listeners: ViewListeners?): RecyclerView.ViewHolder {
+        if (isStaggeredGrid) {
+            val params = StaggeredGridLayoutManager.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            params.isFullSpan = true
+            view.layoutParams = params
+        } else {
+            view.layoutParams = RecyclerView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
         }
-        notifyItemRangeChanged(0, views.size)
+
+        listeners?.onCreated(view)
+
+        return object : RecyclerView.ViewHolder(view) {}
     }
 
     fun adjustSpanSize(recyclerView: RecyclerView) {
@@ -93,39 +117,17 @@ class StaticViewsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 
-    private fun createViewHolder(
-        view: View,
-        listeners: ViewListeners?
-    ): RecyclerView.ViewHolder {
-
-        if (isStaggeredGrid) {
-            val params = StaggeredGridLayoutManager.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            params.isFullSpan = true
-            view.layoutParams = params
-        } else {
-            view.layoutParams = RecyclerView.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-        listeners?.onCreated(view)
-
-        return object : RecyclerView.ViewHolder(view) {}
-    }
-
-    class FixedViewInfo(
+    data class FixedViewInfo(
+        val id: String,
         val viewType: Int,
-        val view: View,
         var localPosition: Int,
+        val viewFactory: (ViewGroup) -> View,
+        val viewBinder: ((View, Int) -> Unit)?,
         val viewListeners: ViewListeners?
     )
 
     interface ViewListeners {
-        fun onCreated(view: View?)
+        fun onCreated(view: View)
     }
 
     companion object {
