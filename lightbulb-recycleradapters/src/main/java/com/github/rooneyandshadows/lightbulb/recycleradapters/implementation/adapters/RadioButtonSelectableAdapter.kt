@@ -6,16 +6,16 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.github.rooneyandshadows.lightbulb.recycleradapters.R
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection
+import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection.Item
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection.SelectableModes.SELECT_SINGLE
 import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView
 import com.github.rooneyandshadows.lightbulb.selectableview.RadioButtonView.OnCheckedChangeListener
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
-    : EasyRecyclerAdapter<ItemType>() {
+open class RadioButtonSelectableAdapter<ItemType : Item> :
+    EasyRecyclerAdapter<ItemType>() {
 
     override val collection: ExtendedCollection<ItemType>
         get() = super.collection as ExtendedCollection<ItemType>
@@ -45,14 +45,16 @@ open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
     @Suppress("UNCHECKED_CAST")
     @Override
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val vHolder: RadioButtonViewHolder = holder as RadioButtonSelectableAdapter<ItemType>.RadioButtonViewHolder
+        val vHolder: RadioButtonViewHolder =
+            holder as RadioButtonSelectableAdapter<ItemType>.RadioButtonViewHolder
         vHolder.bindItem()
     }
 
     @Suppress("UNCHECKED_CAST")
     @Override
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
-        val vh: RadioButtonViewHolder = holder as RadioButtonSelectableAdapter<ItemType>.RadioButtonViewHolder
+        val vh: RadioButtonViewHolder =
+            holder as RadioButtonSelectableAdapter<ItemType>.RadioButtonViewHolder
         vh.recycle()
     }
 
@@ -73,7 +75,8 @@ open class RadioButtonSelectableAdapter<ItemType : EasyAdapterDataModel>
         return null
     }
 
-    inner class RadioButtonViewHolder(radioButtonView: RadioButtonView) : RecyclerView.ViewHolder(radioButtonView) {
+    inner class RadioButtonViewHolder(radioButtonView: RadioButtonView) :
+        RecyclerView.ViewHolder(radioButtonView) {
         private var selectableView: RadioButtonView = itemView as RadioButtonView
         private val onCheckedListener = OnCheckedChangeListener { rbv, isChecked ->
             rbv?.apply {

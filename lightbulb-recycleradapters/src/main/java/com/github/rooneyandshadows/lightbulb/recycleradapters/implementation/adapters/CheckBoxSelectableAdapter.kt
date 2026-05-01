@@ -6,15 +6,15 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.R
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection
+import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection.Item
 import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.ExtendedCollection.SelectableModes.SELECT_MULTIPLE
 import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView
 import com.github.rooneyandshadows.lightbulb.selectableview.CheckBoxView.OnCheckedChangeListener
 
 @Suppress("UNUSED_PARAMETER", "unused", "MemberVisibilityCanBePrivate")
-open class CheckBoxSelectableAdapter<ItemType : EasyAdapterDataModel> : EasyRecyclerAdapter<ItemType>() {
+open class CheckBoxSelectableAdapter<ItemType : Item> : EasyRecyclerAdapter<ItemType>() {
     override val collection: ExtendedCollection<ItemType>
         get() = super.collection as ExtendedCollection<ItemType>
 

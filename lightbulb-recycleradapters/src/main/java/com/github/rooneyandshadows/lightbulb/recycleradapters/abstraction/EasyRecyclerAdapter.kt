@@ -1,47 +1,35 @@
 package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.*
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.EasyRecyclerAdapterCollection
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.AdapterCollection
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
-import com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection.BasicCollection
 
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> : Adapter<ViewHolder>() {
-    private val items: EasyRecyclerAdapterCollection<ItemType> by lazy {
+    private val _collection: AdapterCollection<ItemType> by lazy {
         return@lazy createCollection()
     }
+
     var recyclerView: RecyclerView? = null
         private set
 
-    open val collection: EasyRecyclerAdapterCollection<ItemType>
-        get() = items
+    open val collection: AdapterCollection<ItemType>
+        get() = _collection
 
-    /**
-     * Used to create the collection that the adapter will use.
-     *
-     * @param outState state to save
-     */
-    protected open fun createCollection(): EasyRecyclerAdapterCollection<ItemType> {
-        return BasicCollection(this)
+    abstract fun createCollection(): AdapterCollection<ItemType>
+
+    open fun onSaveInstanceState(): Bundle {
+        return Bundle().apply {
+            putBundle(COLLECTION_STATE_KEY, collection.onSaveInstanceState())
+        }
     }
 
-    /**
-     * Used to add values to out state of the adapter during save state.
-     *
-     * @param outState state to save
-     */
-    protected open fun onSaveInstanceState(outState: Bundle) {
-    }
-
-    /**
-     * Used to reuse values saved during previous save state.
-     *
-     * @param savedState The state that had previously been returned by onSaveInstanceState
-     */
-    protected open fun onRestoreInstanceState(savedState: Bundle) {
+    open fun onRestoreInstanceState(savedState: Bundle) {
+        savedState.getBundle(COLLECTION_STATE_KEY)?.apply {
+            collection.onRestoreInstanceState(this)
+        }
     }
 
     companion object {
@@ -57,22 +45,5 @@ abstract class EasyRecyclerAdapter<ItemType : EasyAdapterDataModel> : Adapter<Vi
     @Override
     override fun getItemCount(): Int {
         return collection.size()
-    }
-
-    fun saveAdapterState(): Bundle {
-        return Bundle().apply {
-            putBundle(COLLECTION_STATE_KEY, collection.saveState())
-            onSaveInstanceState(this)
-        }
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    fun restoreAdapterState(savedState: Bundle) {
-        savedState.apply {
-            getBundle(COLLECTION_STATE_KEY)?.apply {
-                collection.restoreState(this)
-            }
-            onRestoreInstanceState(savedState)
-        }
     }
 }

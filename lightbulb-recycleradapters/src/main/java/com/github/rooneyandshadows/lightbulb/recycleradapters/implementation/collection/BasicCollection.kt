@@ -1,17 +1,15 @@
 package com.github.rooneyandshadows.lightbulb.recycleradapters.implementation.collection
 
 import android.annotation.SuppressLint
-import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
-import com.github.rooneyandshadows.lightbulb.commons.utils.BundleUtils
 import com.github.rooneyandshadows.lightbulb.commons.utils.ParcelUtils
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.EasyRecyclerAdapter
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.EasyRecyclerAdapterCollection
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection.AdapterCollection
+import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
@@ -19,7 +17,7 @@ import java.util.stream.Collectors
 open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constructor(
     adapter: EasyRecyclerAdapter<ItemType>,
     private val itemsComparator: ItemsComparator<ItemType>? = null,
-) : EasyRecyclerAdapterCollection<ItemType>(adapter) {
+) : AdapterCollection<ItemType>(adapter) {
     private val items: MutableList<ItemType> = mutableListOf()
 
     companion object {
@@ -210,35 +208,6 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
         )
     }
 
-    override fun saveState(): Bundle {
-        return Bundle().apply {
-            BundleUtils.putParcelableArrayList(ADAPTER_ITEMS, this, wrapToBasic(items))
-            onSaveInstanceState(this)
-        }
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    @Suppress("UNCHECKED_CAST")
-    override fun restoreState(savedState: Bundle) {
-        items.apply {
-            val clz = Class.forName(BasicItem::class.java.name) as Class<BasicItem<ItemType>>
-            val saved = BundleUtils.getParcelableArrayList(ADAPTER_ITEMS, savedState, clz)
-            val rawItems = saved?.map { return@map it.item }
-            clear()
-            if (rawItems != null) addAll(rawItems)
-        }
-        adapter.notifyDataSetChanged()
-        onRestoreInstanceState(savedState)
-    }
-
-    private fun wrapToBasic(target: ItemType): BasicItem<ItemType> {
-        return BasicItem(target)
-    }
-
-    private fun wrapToBasic(target: List<ItemType>): ArrayList<BasicItem<ItemType>> {
-        return target.map { return@map wrapToBasic(it) }.toCollection(ArrayList())
-    }
-
     private class DiffUtilCallback<T : EasyAdapterDataModel>(
         private val oldData: List<T>,
         private val newData: List<T>,
@@ -290,13 +259,15 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
             this.item = item
         }
 
+        private constructor(parcel: Parcel) : this(parcel, null)
+
         @Suppress("UNCHECKED_CAST")
-        constructor(parcel: Parcel) {
+        private constructor(parcel: Parcel, classLoader: ClassLoader?) {
             val className: String = parcel.readString()!!
             val clazz = Class.forName(
                 className,
                 false,
-                BasicItem::class.java.classLoader
+                classLoader
             ) as Class<ItemType>
             item = ParcelUtils.readParcelable(parcel, clazz) as ItemType
         }
@@ -310,7 +281,14 @@ open class BasicCollection<ItemType : EasyAdapterDataModel> @JvmOverloads constr
             return 0
         }
 
-        companion object CREATOR : Parcelable.Creator<BasicItem<EasyAdapterDataModel>> {
+        companion object CREATOR : Parcelable.ClassLoaderCreator<BasicItem<EasyAdapterDataModel>> {
+            override fun createFromParcel(
+                parcel: Parcel,
+                loader: ClassLoader?
+            ): BasicItem<EasyAdapterDataModel> {
+                return BasicItem(parcel, loader)
+            }
+
             override fun createFromParcel(parcel: Parcel): BasicItem<EasyAdapterDataModel> {
                 return BasicItem(parcel)
             }

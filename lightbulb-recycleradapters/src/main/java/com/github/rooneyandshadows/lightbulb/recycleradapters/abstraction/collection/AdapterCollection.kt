@@ -1,30 +1,17 @@
 package com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.collection
 
 import android.os.Bundle
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.*
 import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterDataModel
-import com.github.rooneyandshadows.lightbulb.recycleradapters.abstraction.data.EasyAdapterObservableDataModel
 import java.util.function.Predicate
 
 @Suppress("unused")
-abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
+abstract class AdapterCollection<ItemType : EasyAdapterDataModel>(
     val adapter: EasyRecyclerAdapter<ItemType>,
-) : DefaultLifecycleObserver {
-    private val onCollectionChangedListeners: MutableList<CollectionChangeListener> = mutableListOf()
-    var lifecycleOwner: LifecycleOwner? = null
-        set(value) {
-            val observer = this
-            field?.apply { lifecycle.removeObserver(observer) }
-            field = value
-            value?.apply { lifecycle.addObserver(observer) }
-        }
+) {
+    private val onCollectionChangedListeners: MutableList<CollectionChangeListener> =
+        mutableListOf()
 
-    @Override
-    override fun onDestroy(owner: LifecycleOwner) {
-        clearObservableCallbacks()
-    }
 
     fun addOnCollectionChangedListener(listener: CollectionChangeListener) {
         if (onCollectionChangedListeners.contains(listener)) {
@@ -43,7 +30,6 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
      * @param items New collection to set
      */
     fun set(items: List<ItemType>) {
-        clearObservableCallbacks()
         if (setInternally(items)) dispatchCollectionChangedEvent()
     }
 
@@ -72,7 +58,6 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
      */
     fun remove(targetPosition: Int) {
         if (!positionExists(targetPosition)) return
-        clearObservableCallbacks(targetPosition)
         if (removeInternally(targetPosition)) dispatchCollectionChangedEvent()
     }
 
@@ -84,7 +69,6 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
     fun removeAll(targets: List<ItemType>) {
         val positionsToRemove = getPositions(targets)
         if (positionsToRemove.isEmpty()) return
-        clearObservableCallbacks(positionsToRemove)
         if (removeAllInternally(targets)) dispatchCollectionChangedEvent()
     }
 
@@ -99,11 +83,7 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
         if (moveInternally(fromPosition, toPosition)) dispatchCollectionChangedEvent()
     }
 
-    /**
-     * Clears the collection
-     */
     fun clear() {
-        clearObservableCallbacks()
         if (clearInternally()) dispatchCollectionChangedEvent()
     }
 
@@ -128,20 +108,11 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
     protected open fun onCollectionChanged() {
     }
 
-    /**
-     * Used to add values to out state of the adapter during save state.
-     *
-     * @param outState state to save
-     */
-    protected open fun onSaveInstanceState(outState: Bundle) {
+    open fun onSaveInstanceState(): Bundle {
+        return Bundle()
     }
 
-    /**
-     * Used to reuse values saved during previous save state.
-     *
-     * @param savedState The state that had previously been returned by onSaveInstanceState
-     */
-    protected open fun onRestoreInstanceState(savedState: Bundle) {
+    open fun onRestoreInstanceState(state: Bundle) {
     }
 
     /**
@@ -227,33 +198,6 @@ abstract class EasyRecyclerAdapterCollection<ItemType : EasyAdapterDataModel>(
     abstract fun getPositionsByItemNames(targetNames: List<String>): IntArray
 
     abstract fun getPositionStrings(positions: IntArray): String
-
-    abstract fun saveState(): Bundle
-
-    abstract fun restoreState(savedState: Bundle)
-
-    private fun clearObservableCallbacks(position: Int) {
-        getItem(position)?.apply {
-            clearObservableCallbacks(this)
-        }
-    }
-
-    private fun clearObservableCallbacks(item: ItemType?) {
-        if (item is EasyAdapterObservableDataModel) item.clearObservableCallbacks()
-    }
-
-    private fun clearObservableCallbacks(positions: IntArray) {
-        getItems().forEachIndexed { position, item ->
-            if (item !is EasyAdapterObservableDataModel || !positions.contains(position)) return@forEachIndexed
-            item.clearObservableCallbacks()
-        }
-    }
-
-    private fun clearObservableCallbacks() {
-        getItems().forEach {
-            clearObservableCallbacks(it)
-        }
-    }
 
     private fun dispatchCollectionChangedEvent() {
         onCollectionChanged()
